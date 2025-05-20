@@ -65,6 +65,8 @@ bottom_area_height = 200
 
 # 牌堆区域
 pile_area_y = 50
+#牌间距
+card_spacing = 50
 
 # 视觉效果
 effect_duration= 1000 # 效果持续时间（毫秒）

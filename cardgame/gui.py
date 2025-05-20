@@ -299,39 +299,6 @@ class GameGUI:
                 return
             return
 
-        # 尝试加载卡牌图片
-        card_image = self.assets.load_card_image(card.type, str(card.value))
-
-        if card_image:
-            if selected:
-                pygame.draw.rect(self.screen, COLORS['YELLOW'],
-                               (scaled_x - 5, scaled_y - 5, scaled_width + 10, scaled_height + 10))
-            scaled_image = pygame.transform.scale(card_image, (scaled_width, scaled_height))
-            self.screen.blit(scaled_image, (scaled_x, scaled_y))
-        else:
-            # 绘制卡牌正面
-            color = CARD_COLORS.get(card.type, COLORS['WHITE'])
-            if selected:
-                pygame.draw.rect(self.screen, COLORS['YELLOW'],
-                               (scaled_x - 5, scaled_y - 5, scaled_width + 10, scaled_height + 10))
-
-            pygame.draw.rect(self.screen, color, (scaled_x, scaled_y, scaled_width, scaled_height))
-            pygame.draw.rect(self.screen, COLORS['BLACK'], (scaled_x, scaled_y, scaled_width, scaled_height), 2)
-
-            # 绘制卡牌数值（移到顶部）
-            value_text = self.font.render(str(card.value), True, COLORS['BLACK'])
-            value_text = pygame.transform.scale(value_text,
-                                             (int(value_text.get_width() * scale), int(value_text.get_height() * scale)))
-            value_rect = value_text.get_rect(center=(scaled_x + scaled_width // 2, scaled_y + 25))
-            self.screen.blit(value_text, value_rect)
-
-            # 绘制卡牌类型（移到中间）
-            type_text = self.small_font.render(card.type, True, COLORS['BLACK'])
-            type_text = pygame.transform.scale(type_text,
-                                            (int(type_text.get_width() * scale), int(type_text.get_height() * scale)))
-            type_rect = type_text.get_rect(center=(scaled_x + scaled_width // 2, scaled_y + scaled_height // 2))
-            self.screen.blit(type_text, type_rect)
-
     def draw_pile(self, pile_index: int, pile):
         """绘制牌堆"""
         x = 50 + pile_index * (self.card_width + 30)  # 增加间距
@@ -355,10 +322,7 @@ class GameGUI:
             
             card = pile.face_up_cards[i]
             card_y = y + (hidden_cards_count + i) * 30
-            
-            # 如果是顶部的牌，位置靠下一些
-            if i == len(pile.face_up_cards) - 1:
-                card_y += 20
+
             
             # 设置缩放
             scale = self.hover_scale if self.hovered_card == (pile_index, i) else 1.0
