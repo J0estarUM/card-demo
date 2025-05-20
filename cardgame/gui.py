@@ -1,6 +1,7 @@
 import pygame
 import sys
 import os
+from config import *
 from typing import Tuple, Optional, Dict
 from game import Game
 from card import Card
@@ -55,27 +56,6 @@ class AssetManager:
             self.ui_elements[name] = image
             return image
         return None
-
-
-# 颜色定义
-COLORS = {
-    'WHITE': (255, 255, 255),
-    'BLACK': (0, 0, 0),
-    'RED': (255, 0, 0),
-    'GREEN': (0, 255, 0),
-    'BLUE': (0, 0, 255),
-    'GRAY': (200, 200, 200),
-    'LIGHT_BLUE': (173, 216, 230),
-    'YELLOW': (255, 255, 0)
-}
-
-# 卡牌类型颜色映射
-CARD_COLORS = {
-    'attack': (255, 100, 100),  # 红色系
-    'defense': (100, 100, 255),  # 蓝色系
-    'curse': (100, 100, 100),  # 灰色系
-    'heal': (100, 255, 100)  # 绿色系
-}
 
 
 class CardGUI:
@@ -147,8 +127,8 @@ class GameGUI:
     def __init__(self, game: Game):
         pygame.init()
         self.game = game
-        self.screen_width = 1200
-        self.screen_height = 800
+        self.screen_width = screen_width
+        self.screen_height = screen_height
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
         pygame.display.set_caption("Card Game")
         self.clock = pygame.time.Clock()
@@ -157,10 +137,10 @@ class GameGUI:
         self.assets = AssetManager()
 
         # 卡牌尺寸
-        self.card_width = 100
-        self.card_height = 150
-        self.card_scale = 1.0
-        self.hover_scale = 1.2
+        self.card_width = card_width
+        self.card_height =card_height
+        self.card_scale = card_scale
+        self.hover_scale = hover_scale
 
         # 字体
         self.font = pygame.font.Font(None, 36)
@@ -176,7 +156,7 @@ class GameGUI:
         self.hovered_card = None
 
         # 底部区域布局
-        self.bottom_area_height = 200
+        self.bottom_area_height = bottom_area_height
         self.bottom_area_rect = pygame.Rect(
             0,
             self.screen_height - self.bottom_area_height,
@@ -209,11 +189,11 @@ class GameGUI:
         )
 
         # 牌堆区域（上移）
-        self.pile_area_y = 50  # 原来是200
+        self.pile_area_y = pile_area_y
 
         # 视觉效果
         self.effects = []
-        self.effect_duration = 1000  # 效果持续时间（毫秒）
+        self.effect_duration = effect_duration  # 效果持续时间（毫秒）
         
         # 初始化界面
         self.initialize_gui()
@@ -225,9 +205,22 @@ class GameGUI:
         self.background.fill(COLORS['WHITE'])
 
         # 加载卡牌背面
-        self.card_back = pygame.Surface((self.card_width, self.card_height))
-        self.card_back.fill(COLORS['BLUE'])
-        pygame.draw.rect(self.card_back, COLORS['BLACK'], self.card_back.get_rect(), 2)
+        self.card_back_img = pygame.image.load(back_card).convert_alpha()
+        self.card_back_img = pygame.transform.scale(self.card_back_img, (self.card_width, self.card_height))
+
+        # 加载正面卡牌
+        self.attack_img = pygame.image.load(attack_card).convert_alpha()
+        self.defense_img = pygame.image.load(defense_card).convert_alpha()
+        self.curse_img = pygame.image.load(curse_card).convert_alpha()
+        self.heal_img = pygame.image.load(heal_card).convert_alpha()
+        self.attack_img = pygame.transform.scale(
+            pygame.image.load(attack_card).convert_alpha(), (self.card_width, self.card_height))
+        self.defense_img = pygame.transform.scale(
+            pygame.image.load(defense_card).convert_alpha(), (self.card_width, self.card_height))
+        self.curse_img = pygame.transform.scale(
+            pygame.image.load(curse_card).convert_alpha(), (self.card_width, self.card_height))
+        self.heal_img = pygame.transform.scale(
+            pygame.image.load(heal_card).convert_alpha(), (self.card_width, self.card_height))
 
         # 加载生命值条
         self.hp_bar = pygame.Surface((0,0))
@@ -277,6 +270,7 @@ class GameGUI:
 
     def draw_card(self, card: Card, x: int, y: int, scale: float = 1.0, selected: bool = False, face_up: bool = True):
         """绘制单张卡牌"""
+
         # 计算缩放后的尺寸
         scaled_width = int(self.card_width * scale)
         scaled_height = int(self.card_height * scale)
@@ -284,16 +278,25 @@ class GameGUI:
         # 计算缩放后的位置，保持卡牌左上角不变
         scaled_x = x
         scaled_y = y
+        if face_up:
+            if card.type == 'attack':
+                self.screen.blit(self.attack_img, (scaled_x, scaled_y))
+                return
+            elif card.type == 'defense':
+                self.screen.blit(self.defense_img, (scaled_x, scaled_y))
+                return
+            elif card.type == 'curse':
+                self.screen.blit(self.curse_img, (scaled_x, scaled_y))
+                return
+            elif card.type == 'heal':
+                self.screen.blit(self.heal_img, (scaled_x, scaled_y))
+                return
 
         if not face_up:
-            # 绘制卡牌背面
-            pygame.draw.rect(self.screen, COLORS['BLUE'], (scaled_x, scaled_y, scaled_width, scaled_height))
-            pygame.draw.rect(self.screen, COLORS['BLACK'], (scaled_x, scaled_y, scaled_width, scaled_height), 2)
-            # 绘制背面花纹
-            for i in range(0, scaled_width, 10):
-                pygame.draw.line(self.screen, COLORS['LIGHT_BLUE'],
-                               (scaled_x + i, scaled_y),
-                               (scaled_x + i, scaled_y + scaled_height))
+            if not face_up:
+                # 绘制卡牌背面图片
+                self.screen.blit(self.card_back_img, (scaled_x, scaled_y))
+                return
             return
 
         # 尝试加载卡牌图片
