@@ -231,41 +231,41 @@ class GameGUI:
         self.relic_frame.fill(COLORS['YELLOW'])
         pygame.draw.rect(self.relic_frame, COLORS['BLACK'], self.relic_frame.get_rect(), 2)
 
-    def get_card_rect(self, pile_index: int, card_index: int) -> pygame.Rect:
-        """获取卡牌在屏幕上的矩形区域"""
-        x = 50 + pile_index * (self.card_width + 20)
+    def get_card_rect(self, pile_index: int, card_index: int, margin: int = 10) -> pygame.Rect:
+        x = pile_start_x + pile_index * (self.card_width + card_spacing)
         base_y = self.pile_area_y
-        
-        # 计算暗牌数量
         pile = self.game.piles[pile_index]
         hidden_cards_count = len(pile.cards) - len(pile.face_up_cards)
-        
-        # 计算卡牌位置
-        y = base_y + (hidden_cards_count + card_index) * 30
-        if card_index == len(pile.face_up_cards) - 1:  # 如果是顶部的牌
-            y += 20  # 位置靠下一些
-            
-        return pygame.Rect(x, y, self.card_width, self.card_height)
+        y = base_y + (hidden_cards_count + card_index) * card_spacing
+        return pygame.Rect(x + margin, y + margin, self.card_width - 2 * margin, self.card_height - 2 * margin)
 
-    def get_card_at_pos(self, pos: Tuple[int, int]) -> Optional[Tuple[int, int]]:
-        """获取指定位置的卡牌（只允许点击未被遮挡的部分）"""
+    def select_card_at_pos(self, pos: Tuple[int, int]) -> Optional[Tuple[int, int]]:
+        """
+        返回鼠标位置选中的牌（pile_index, card_index），只允许选中可见区域。
+        优先级：最上层优先。
+        """
         x, y = pos
         for pile_index, pile in enumerate(self.game.piles):
-            for card_index, _ in enumerate(pile.face_up_cards):
-                card_rect = self.get_card_rect(pile_index, card_index)
-                if card_index == len(pile.face_up_cards) - 1:
-                    visible_rect = card_rect  # 顶部牌全部可见
+            n = len(pile.face_up_cards)
+            if n == 0:
+                continue
+            for card_index in reversed(range(n)):
+                card_rect = self.get_card_rect(pile_index, card_index, margin=card_select_margin)
+                if card_index == n - 1:
+                    if card_rect.collidepoint(x, y):
+                        return (pile_index, card_index)
                 else:
-                    next_card_rect = self.get_card_rect(pile_index, card_index + 1)
+                    next_card_rect = self.get_card_rect(pile_index, card_index + 1, margin=card_select_margin)
                     visible_height = next_card_rect.y - card_rect.y
-                    visible_rect = pygame.Rect(
-                        card_rect.x,
-                        card_rect.y,
-                        card_rect.width,
-                        visible_height
-                    )
-                if visible_rect.collidepoint(x, y):
-                    return (pile_index, card_index)
+                    if visible_height > 0:
+                        visible_rect = pygame.Rect(
+                            card_rect.x,
+                            card_rect.y,
+                            card_rect.width,
+                            visible_height
+                        )
+                        if visible_rect.collidepoint(x, y):
+                            return (pile_index, card_index)
         return None
 
     def draw_card(self, card: Card, x: int, y: int, scale: float = 1.0, selected: bool = False, face_up: bool = True):
@@ -301,7 +301,7 @@ class GameGUI:
 
     def draw_pile(self, pile_index: int, pile):
         """绘制牌堆"""
-        x = 50 + pile_index * (self.card_width + 30)  # 增加间距
+        x = pile_start_x + pile_index * (self.card_width + card_spacing)  # 增加间距
         y = self.pile_area_y
 
         # 绘制牌堆剩余数量
@@ -312,7 +312,7 @@ class GameGUI:
         # 先绘制暗牌
         hidden_cards_count = len(pile.cards) - len(pile.face_up_cards)
         for i in range(hidden_cards_count):
-            self.draw_card(None, x, y + i * 30, 1.0, face_up=False)
+            self.draw_card(None, x, y + i * card_spacing, 1.0, face_up=False)
 
         # 从底部开始绘制明牌，确保顶部的牌在最上层
         for i in range(len(pile.face_up_cards)):
@@ -321,7 +321,7 @@ class GameGUI:
                     continue
             
             card = pile.face_up_cards[i]
-            card_y = y + (hidden_cards_count + i) * 30
+            card_y = y + (hidden_cards_count + i) * card_spacing
 
             
             # 设置缩放
@@ -345,7 +345,7 @@ class GameGUI:
             
             # 绘制选中的卡牌组
             for i, card in enumerate(cards_to_draw):
-                card_y = base_y + i * 30
+                card_y = base_y + i * card_spacing
                 self.draw_card(card, base_x, card_y, self.hover_scale, True)
 
     def draw_bottom_area(self):
@@ -513,25 +513,22 @@ class GameGUI:
 
     def handle_mouse_motion(self, pos: Tuple[int, int]):
         """处理鼠标移动事件"""
-        # 更新悬停的卡牌
-        self.hovered_card = self.get_card_at_pos(pos)
+        self.hovered_card = self.select_card_at_pos(pos)
 
     def handle_mouse_down(self, pos: Tuple[int, int]):
         """处理鼠标按下事件"""
-        # 从顶部开始检查卡牌，这样可以优先选择上层的卡牌
-        for pile_index, pile in enumerate(self.game.piles):
-            for card_index in range(len(pile.face_up_cards) - 1, -1, -1):
+        result = self.select_card_at_pos(pos)
+        if result is not None:
+            pile_index, card_index = result
+            pile = self.game.piles[pile_index]
+            top_card_index = len(pile.face_up_cards) - 1
+            if card_index >= top_card_index - 4:
+                self.dragging = True
+                self.drag_card = (pile_index, card_index)
                 card_rect = self.get_card_rect(pile_index, card_index)
-                if card_rect.collidepoint(pos):
-                    # 只允许拖动顶部卡牌或其下最多4张卡牌
-                    top_card_index = len(pile.face_up_cards) - 1
-                    if card_index >= top_card_index - 4:
-                        self.dragging = True
-                        self.drag_card = (pile_index, card_index)
-                        self.drag_start_pos = pos
-                        self.drag_offset = (pos[0] - card_rect.x, pos[1] - card_rect.y)
-                        return
-                    break  # 如果点击的是更下面的卡牌，直接退出
+                self.drag_start_pos = pos
+                self.drag_offset = (pos[0] - card_rect.x, pos[1] - card_rect.y)
+                return
 
     def handle_mouse_up(self, pos: Tuple[int, int]):
         """处理鼠标释放事件"""
@@ -554,7 +551,7 @@ class GameGUI:
                             self.add_effect('damage', card.value, effect_pos)
                         elif card.type in ['defense', 'heal']:
                             self.add_effect('heal', card.value, effect_pos)
-                        effect_pos = (effect_pos[0], effect_pos[1] + 30)
+                        effect_pos = (effect_pos[0], effect_pos[1] + card_spacing)
                     
                     # 移除所有结算的卡牌
                     for card in cards_to_settle:
@@ -574,7 +571,6 @@ class GameGUI:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return False
-            
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:  # 左键点击
                     # 检查是否点击了遗物
@@ -591,41 +587,31 @@ class GameGUI:
                             if relic.trigger_type == 'click':
                                 success, message = relic.trigger()
                             return True
-
                     # 检查卡牌点击
-                    for pile_index, pile in enumerate(self.game.piles):
-                        if len(pile.face_up_cards) == 0:
-                            continue
-                            
-                        # 获取牌堆中可以拖动的卡牌范围
+                    result = self.select_card_at_pos(mouse_pos)
+                    if result is not None:
+                        pile_index, card_index = result
+                        pile = self.game.piles[pile_index]
                         top_index = len(pile.face_up_cards) - 1
-                        start_index = max(0, top_index - 4)  # 最多可以拖动5张牌
-                        
-                        # 检查从顶部开始的每张牌
-                        for card_index in range(top_index, start_index - 1, -1):
+                        if card_index >= top_index - 4:
+                            self.dragging = True
+                            self.drag_card = (pile_index, card_index)
                             card_rect = self.get_card_rect(pile_index, card_index)
-                            if card_rect.collidepoint(event.pos):
-                                self.dragging = True
-                                self.drag_card = (pile_index, card_index)
-                                self.drag_offset = (event.pos[0] - card_rect.x, event.pos[1] - card_rect.y)
-            
+                            self.drag_offset = (mouse_pos[0] - card_rect.x, mouse_pos[1] - card_rect.y)
             elif event.type == pygame.MOUSEBUTTONUP:
                 if event.button == 1 and self.dragging:
                     # 检查是否可以放置到结算区域
                     if self.settlement_area_rect.collidepoint(event.pos):
                         from_pile, from_index = self.drag_card
                         pile = self.game.piles[from_pile]
-                        
                         # 获取要结算的所有卡牌
                         cards_to_settle = pile.face_up_cards[from_index:]
-                        
                         # 处理结算
                         success, message = self.game.add_to_settlement(list(cards_to_settle))
                         if success:
                             # 移除所有结算的卡牌
                             for card in cards_to_settle:
                                 pile.remove_card(pile.cards.index(card))
-                            
                             # 如果牌堆还有卡牌，翻开顶部卡牌
                             if pile.cards and not pile.face_up_cards:
                                 pile.flip_top_card()
@@ -633,7 +619,7 @@ class GameGUI:
                         # 检查是否可以放置到其他牌堆
                         for pile_index, pile in enumerate(self.game.piles):
                             pile_rect = pygame.Rect(
-                                50 + pile_index * (self.card_width + 20),
+                                pile_start_x + pile_index * (self.card_width + card_spacing),
                                 self.pile_area_y,  # 更新牌堆位置
                                 self.card_width,
                                 self.card_height * 3
@@ -642,12 +628,10 @@ class GameGUI:
                                 from_pile, from_index = self.drag_card
                                 if from_pile != pile_index:
                                     success, message = self.game.move_cards(from_pile, pile_index, from_index)
-            
                     # 重置拖动状态
                     self.dragging = False
                     self.drag_card = None
                     self.drag_offset = (0, 0)
-            
             elif event.type == pygame.MOUSEMOTION:
                 if not self.dragging:
                     mouse_pos = event.pos
@@ -662,10 +646,8 @@ class GameGUI:
                         )
                         if relic_rect.collidepoint(mouse_pos):
                             return True
-
-                    # 检查卡牌悬停（只在未被遮挡区域才算悬停）
-                    self.hovered_card = self.get_card_at_pos(mouse_pos)
-        
+                    # 检查卡牌悬停
+                    self.hovered_card = self.select_card_at_pos(mouse_pos)
         return True
 
     def run(self):

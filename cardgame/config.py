@@ -1,4 +1,3 @@
-
 # 卡牌类型
 CARD_TYPES = ['attack', 'defense', 'curse', 'heal']
 
@@ -66,8 +65,14 @@ bottom_area_height = 200
 # 牌堆区域
 pile_area_y = 50
 #牌间距
-card_spacing = 50
+card_spacing = 40
 
 # 视觉效果
 effect_duration= 1000 # 效果持续时间（毫秒）
+
+# 牌选取判定区域边距
+card_select_margin = 5
+
+# 牌堆起始x坐标
+pile_start_x = 50
 
