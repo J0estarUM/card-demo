@@ -86,62 +86,81 @@ class Game:
         return not self.player.is_alive()
         
     def check_win_condition(self) -> bool:
-        """检查是否满足胜利条件"""
-        # 这里可以添加胜利条件
-        return False 
+        """所有牌堆和结算区都没有诅咒卡即胜利"""
+        for pile in self.piles:
+            for card in pile.cards:
+                if card.type == 'curse':
+                    return False
+        for card in self.settlement_area:
+            if card.type == 'curse':
+                return False
+        return True
 
     def add_to_settlement(self, cards: List[Card]) -> Tuple[bool, str]:
-        """将一组卡牌添加到结算区域并立即处理效果"""
+        """将一组卡牌添加到结算区域并立即处理效果（新规则）"""
         if not cards:
             return False, "No cards to process"
-        
-        total_attack = 0
-        total_defense = 0
-        total_heal = 0
-        total_curse = 0
-        has_curse = False
-        
-        # 计算各种类型的总值
-        for card in cards:
-            if card.type == 'attack':
-                total_attack += card.value
-            elif card.type == 'defense':
-                total_defense += card.value
-            elif card.type == 'heal':
-                total_heal += card.value
-            elif card.type == 'curse':
-                has_curse = True
-                total_curse += card.value  # 诅咒卡造成双倍伤害
-        
-        # 应用效果
-        if total_attack >= total_curse-total_defense:
-            damage=0
+
+        # 统计本次拖入的诅咒卡、攻击卡、防御卡
+        curse_cards = [c for c in cards if c.type == 'curse']
+        attack_cards = [c for c in cards if c.type == 'attack']
+        defense_cards = [c for c in cards if c.type == 'defense']
+        other_cards = [c for c in cards if c.type not in ('curse', 'attack', 'defense')]
+        msg_list = []
+        # 1. 处理诅咒卡：只加入结算区，不立即扣血
+        if curse_cards:
+            self.settlement_area.extend(curse_cards)
+            msg_list.append(f"拖入{len(curse_cards)}张诅咒卡，等待结算。")
+        # 2. 处理防御+攻击卡（与结算区已有诅咒卡互动）
+        exist_curse = [c for c in self.settlement_area if c.type == 'curse']
+        if defense_cards or attack_cards:
+            remain_curse_cards = sorted(exist_curse, key=lambda x: x.value)
+            removed_by_defense = []
+            removed_by_attack = []
+            returned_curse = []
+            remain_defense = sum(c.value for c in defense_cards)
+            remain_attack = sum(c.value for c in attack_cards)
+            # 先用防御抵消诅咒卡
+            for curse in remain_curse_cards:
+                if remain_defense >= curse.value:
+                    remain_defense -= curse.value
+                    removed_by_defense.append(curse)
+                else:
+                    break
+            # 更新剩余未被防御抵消的诅咒卡
+            remain_curse_cards = [c for c in remain_curse_cards if c not in removed_by_defense]
+            # 再用攻击消灭诅咒卡
+            for curse in remain_curse_cards:
+                if remain_attack >= curse.value:
+                    remain_attack -= curse.value
+                    removed_by_attack.append(curse)
+                else:
+                    returned_curse.append(curse)
+            # 更新结算区，移除被消灭和返回的诅咒卡
+            self.settlement_area = [c for c in self.settlement_area if c.type != 'curse']
+            for curse in returned_curse:
+                self.piles[0].add_card(curse)
+            # 玩家只扣未被抵消/消灭的诅咒牌的总和
+            total_damage = sum(c.value for c in returned_curse)
+            if removed_by_defense:
+                msg_list.append(f"防御成功抵消{len(removed_by_defense)}张诅咒卡。")
+            if removed_by_attack:
+                msg_list.append(f"攻击消灭{len(removed_by_attack)}张诅咒卡。")
+            if returned_curse:
+                if total_damage > 0:
+                    self.player.take_damage(total_damage)
+                    msg_list.append(f"仍有{len(returned_curse)}张诅咒卡未被消灭，已返回牌堆，受到{total_damage}点伤害。")
+                else:
+                    msg_list.append(f"仍有{len(returned_curse)}张诅咒卡未被消灭，已返回牌堆。")
+            if not (removed_by_defense or removed_by_attack or returned_curse):
+                msg_list.append("结算区没有诅咒卡，无需结算。")
+        # 其他卡牌（如治疗）
+        for card in other_cards:
+            if card.type == 'heal':
+                self.player.heal(card.value)
+                msg_list.append(f"治疗{card.value}点生命值。")
+        if msg_list:
+            return True, ' '.join(msg_list)
         else:
-            damage=total_curse-total_defense-total_attack
-
-        if total_heal > 0:
-            self.player.heal(total_heal)
-
-        if has_curse:
-            self.player.take_damage(damage)
-            return True, f"Curse activated! Dealt {damage} damage"
-
-        # 构建效果消息
-        effects = []
-        if total_attack >= total_curse - total_defense:
-            damage = 0
-        else:
-            damage = total_curse - total_defense - total_attack
-
-        if total_heal > 0:
-            self.player.heal(total_heal)
-
-        if has_curse:
-            self.player.take_damage(damage)
-            return True, f"Curse activated! Dealt {damage} damage"
-        
-        if effects:
-            return True, " and ".join(effects)
-        else:
-            return False, "No effect"
+            return False, "未产生结算效果。"
 
