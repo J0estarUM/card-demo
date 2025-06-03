@@ -18,16 +18,23 @@ class Game:
         
     def initialize_game(self):
         """初始化游戏"""
-        # 创建卡牌
+        # 创建52张卡牌，数值范围1-16，类型随机
         card_types = ['attack', 'defense', 'curse', 'heal']
-        for pile in self.piles:
-            # 每个牌堆添加10张随机卡牌
-            for _ in range(10):
-                card_type = random.choice(card_types)
-                value = random.randint(1, 10)
-                card = Card(card_type, value, face_up=False)
-                pile.add_card(card)
-            # 翻开顶部卡牌
+        total_cards = 52
+        all_cards = []
+        for _ in range(total_cards):
+            card_type = random.choice(card_types)
+            value = random.randint(1, 16)
+            card = Card(card_type, value, face_up=False)
+            all_cards.append(card)
+        random.shuffle(all_cards)
+        # 初始牌堆分布 [9,9,8,8,9,9]
+        pile_counts = [9, 9, 8, 8, 9, 9]
+        idx = 0
+        for pile, count in zip(self.piles, pile_counts):
+            for _ in range(count):
+                pile.add_card(all_cards[idx])
+                idx += 1
             pile.first_flip()
 
     def move_cards(self, from_pile: int, to_pile: int, start_card_index: int) -> Tuple[bool, str]:

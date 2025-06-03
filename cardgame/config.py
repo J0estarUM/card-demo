@@ -2,7 +2,7 @@
 CARD_TYPES = ['attack', 'defense', 'curse', 'heal']
 
 # 卡牌数值范围
-CARD_VALUES = list(range(1, 11))  # 1-10
+CARD_VALUES = list(range(1, 17))  # 1-16
 
 #屏幕大小
 screen_width = 1200
@@ -57,7 +57,7 @@ CARD_COLORS = {
 card_width = 100
 card_height = 150
 card_scale = 1.0
-hover_scale = 1.2
+hover_scale = 1.0
 
 # 底部区域布局
 bottom_area_height = 200
@@ -75,4 +75,17 @@ card_select_margin = 5
 
 # 牌堆起始x坐标
 pile_start_x = 50
+
+# 数字图片在卡牌上的显示偏移（相对于卡牌左上角，单位像素）
+NUM_IMAGE_OFFSET = (0.8, 5)  # (x_offset, y_offset)，默认在卡牌正上方中间
+
+# 数字图片缩放比例
+NUM_IMAGE_SCALE = 1.0  # 1.0为原始大小，可根据需要调整
+
+NUM_IMAGES = {
+    1: num_1, 2: num_2, 3: num_3, 4: num_4, 5: num_5, 6: num_6, 7: num_7, 8: num_8,
+    9: num_9, 10: num_10, 11: num_11, 12: num_12, 13: num_13, 14: num_14, 15: num_15, 16: num_16
+}
+
+
 

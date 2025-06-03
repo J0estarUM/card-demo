@@ -231,6 +231,13 @@ class GameGUI:
         self.relic_frame.fill(COLORS['YELLOW'])
         pygame.draw.rect(self.relic_frame, COLORS['BLACK'], self.relic_frame.get_rect(), 2)
 
+        # 加载数值图片
+        self.num_images = {}
+        for value, path in NUM_IMAGES.items():
+            img = pygame.image.load(path).convert_alpha()
+            img = pygame.transform.scale(img, (30, 30))  # 可根据需要调整尺寸
+            self.num_images[value] = img
+
     def get_card_rect(self, pile_index: int, card_index: int, margin: int = 10) -> pygame.Rect:
         x = pile_start_x + pile_index * (self.card_width + card_spacing)
         base_y = self.pile_area_y
@@ -281,15 +288,59 @@ class GameGUI:
         if face_up:
             if card.type == 'attack':
                 self.screen.blit(self.attack_img, (scaled_x, scaled_y))
+                # 绘制数值图片
+                num_img = self.num_images.get(card.value)
+                if num_img:
+                    offset_x, offset_y = NUM_IMAGE_OFFSET
+                    # 数字图片也随卡牌scale和NUM_IMAGE_SCALE缩放
+                    scaled_num_width = int(num_img.get_width() * scale * NUM_IMAGE_SCALE)
+                    scaled_num_height = int(num_img.get_height() * scale * NUM_IMAGE_SCALE)
+                    scaled_num_img = pygame.transform.smoothscale(num_img, (scaled_num_width, scaled_num_height))
+                    num_x = scaled_x + (scaled_width - scaled_num_width) // 2 + int(offset_x * scale)
+                    num_y = scaled_y + int(offset_y * scale)
+                    self.screen.blit(scaled_num_img, (num_x, num_y))
                 return
             elif card.type == 'defense':
                 self.screen.blit(self.defense_img, (scaled_x, scaled_y))
+                # 绘制数值图片
+                num_img = self.num_images.get(card.value)
+                if num_img:
+                    offset_x, offset_y = NUM_IMAGE_OFFSET
+                    # 数字图片也随卡牌scale和NUM_IMAGE_SCALE缩放
+                    scaled_num_width = int(num_img.get_width() * scale * NUM_IMAGE_SCALE)
+                    scaled_num_height = int(num_img.get_height() * scale * NUM_IMAGE_SCALE)
+                    scaled_num_img = pygame.transform.smoothscale(num_img, (scaled_num_width, scaled_num_height))
+                    num_x = scaled_x + (scaled_width - scaled_num_width) // 2 + int(offset_x * scale)
+                    num_y = scaled_y + int(offset_y * scale)
+                    self.screen.blit(scaled_num_img, (num_x, num_y))
                 return
             elif card.type == 'curse':
                 self.screen.blit(self.curse_img, (scaled_x, scaled_y))
+                # 绘制数值图片
+                num_img = self.num_images.get(card.value)
+                if num_img:
+                    offset_x, offset_y = NUM_IMAGE_OFFSET
+                    # 数字图片也随卡牌scale和NUM_IMAGE_SCALE缩放
+                    scaled_num_width = int(num_img.get_width() * scale * NUM_IMAGE_SCALE)
+                    scaled_num_height = int(num_img.get_height() * scale * NUM_IMAGE_SCALE)
+                    scaled_num_img = pygame.transform.smoothscale(num_img, (scaled_num_width, scaled_num_height))
+                    num_x = scaled_x + (scaled_width - scaled_num_width) // 2 + int(offset_x * scale)
+                    num_y = scaled_y + int(offset_y * scale)
+                    self.screen.blit(scaled_num_img, (num_x, num_y))
                 return
             elif card.type == 'heal':
                 self.screen.blit(self.heal_img, (scaled_x, scaled_y))
+                # 绘制数值图片
+                num_img = self.num_images.get(card.value)
+                if num_img:
+                    offset_x, offset_y = NUM_IMAGE_OFFSET
+                    # 数字图片也随卡牌scale和NUM_IMAGE_SCALE缩放
+                    scaled_num_width = int(num_img.get_width() * scale * NUM_IMAGE_SCALE)
+                    scaled_num_height = int(num_img.get_height() * scale * NUM_IMAGE_SCALE)
+                    scaled_num_img = pygame.transform.smoothscale(num_img, (scaled_num_width, scaled_num_height))
+                    num_x = scaled_x + (scaled_width - scaled_num_width) // 2 + int(offset_x * scale)
+                    num_y = scaled_y + int(offset_y * scale)
+                    self.screen.blit(scaled_num_img, (num_x, num_y))
                 return
 
         if not face_up:
@@ -316,17 +367,13 @@ class GameGUI:
 
         # 从底部开始绘制明牌，确保顶部的牌在最上层
         for i in range(len(pile.face_up_cards)):
+            # 拖动时跳过正在拖动的牌及其上方的牌
             if self.dragging and self.drag_card and self.drag_card[0] == pile_index:
-                if i >= self.drag_card[1]:  # 跳过正在拖动的卡牌及其上方的卡牌
+                if i >= self.drag_card[1]:
                     continue
-            
             card = pile.face_up_cards[i]
             card_y = y + (hidden_cards_count + i) * card_spacing
-
-            
-            # 设置缩放
-            scale = self.hover_scale if self.hovered_card == (pile_index, i) else 1.0
-            self.draw_card(card, x, card_y, scale, face_up=True)
+            self.draw_card(card, x, card_y, 1.0, face_up=True)
 
     def draw_dragging_card(self):
         """绘制正在拖拽的卡牌"""
