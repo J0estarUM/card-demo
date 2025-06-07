@@ -8,8 +8,8 @@ CARD_VALUES = list(range(1, 17))  # 1-16
 BASE_WIDTH = 1200
 BASE_HEIGHT = 800
 # 目标分辨率
-SCREEN_WIDTH = 1920
-SCREEN_HEIGHT = 1080
+SCREEN_WIDTH = 1600
+SCREEN_HEIGHT = 900
 # 缩放系数
 SCALE_X = SCREEN_WIDTH / BASE_WIDTH
 SCALE_Y = SCREEN_HEIGHT / BASE_HEIGHT
@@ -45,17 +45,42 @@ num_15="assets/cards/15.png"
 num_16="assets/cards/16.png"
 
 #开始界面图片
-title_img="assets/backgrounds/52.png"
-titleBackground_img="assets/backgrounds/background.png"
-button_img="assets/images/button.png"
-cloud1_img="assets/images/cloud1.png"
-cloud2_img="assets/images/cloud2.png"
-eye_img="assets/images/eye.png"
-loadGame_img="assets/backgrounds/load game.png"
-loading_img="assets/images/loading.png"
-new_game_img="assets/backgrounds/new game.png"
-stars_img="assets/images/stars.png"
+TITLE_IMG = "assets/backgrounds/52.png"
+TITLE_IMG_SIZE = (400* SCALE*3, 120* SCALE*6)  # 标题图片缩放尺寸
+TITLE_IMG_OFFSET = (0, 40)   # 标题图片相对屏幕上方的偏移（x, y）
 
+CLOUD1_IMG = "assets/backgrounds/cloud1.png"
+CLOUD1_IMG_SIZE = (400* SCALE*4, 120* SCALE*8)  # 云朵图片缩放尺寸
+CLOUD1_IMG_OFFSET = (40, 30)
+
+CLOUD2_IMG = "assets/backgrounds/cloud2.png"
+CLOUD2_IMG_SIZE = (1920, 900)  # 云朵2图片缩放尺寸
+CLOUD2_IMG_OFFSET = (40, 30)  # 云朵2图片距离右下角的偏移（x, y）
+
+eye_img="assets/backgrounds/eye.png"
+eye_img_size=(1500, 800)
+eye_img_offset = (0, 0)
+
+STARS_IMG = "assets/backgrounds/stars.png"
+STARS_IMG_SIZE = (SCREEN_WIDTH * SCALE/1.1 , SCREEN_HEIGHT* SCALE/1.1 )  # 星星图片缩放尺寸
+STARS_IMG_OFFSET = (0, 0)  # 星星图片左上角相对屏幕的偏移（x, y）
+
+NEW_GAME_IMG = "assets/backgrounds/new game.png"
+START_BG_IMG = "assets/backgrounds/background.png"  # 背景图片
+# 开始按钮图片尺寸
+START_BTN_SIZE = (400* SCALE*2, 120* SCALE*4)
+BTN_IMG = "assets/backgrounds/button.png"  # 开始按钮图片
+LOADGAME_IMG = "assets/backgrounds/load game.png"  # load game字样图片
+# load game字样图片相对按钮的偏移（x, y）
+LOADGAME_TEXT_OFFSET = (0, -90)
+LOADING_IMG = "assets/backgrounds/loading.png"
+LOADING_DURATION = 2.5  # 加载动画时长（秒）
+LOADING_IMG_SIZE = (1500, 800)  # 加载动画图片缩放尺寸
+
+JUHAO_IMG = "assets/backgrounds/juhao1.png"
+JUHAO_IMG_SIZE = (1500, 800)  # 省略号图片缩放尺寸
+JUHAO_IMG_OFFSET = (-750, -800)  # 第一个省略号相对loading文字的偏移
+JUHAO_IMG_GAP = -1450 # 每个省略号之间的间距
 
 # 颜色定义
 COLORS = {
@@ -81,7 +106,7 @@ CARD_COLORS = {
 card_width = int(100 * SCALE)
 card_height = int(150 * SCALE)
 card_scale = SCALE
-hover_scale = 1.0 * SCALE  # 悬停时略微放大
+hover_scale = 1.0  # 悬停时略微放大
 
 # 底部区域布局
 bottom_area_height = 200
@@ -110,6 +135,14 @@ NUM_IMAGES = {
     1: num_1, 2: num_2, 3: num_3, 4: num_4, 5: num_5, 6: num_6, 7: num_7, 8: num_8,
     9: num_9, 10: num_10, 11: num_11, 12: num_12, 13: num_13, 14: num_14, 15: num_15, 16: num_16
 }
+
+
+
+
+
+
+
+
 
 
 

@@ -5,6 +5,7 @@ from config import *
 from typing import Tuple, Optional, Dict
 from game import Game
 from card import Card
+from start_menu import StartMenu
 
 
 # 资源管理类
