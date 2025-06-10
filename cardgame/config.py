@@ -108,7 +108,7 @@ hover_scale = 1.0  # 悬停时略微放大
 bottom_area_height = 200
 
 # 牌堆区域
-pile_area_y = 50
+pile_area_y = 30
 #牌间距
 card_spacing = int(40 * SCALE)
 
@@ -132,8 +132,36 @@ NUM_IMAGES = {
     9: num_9, 10: num_10, 11: num_11, 12: num_12, 13: num_13, 14: num_14, 15: num_15, 16: num_16
 }
 
+# 结算区域参数
+settlement_area_x = int(340 * SCALE)
+settlement_area_y = screen_height - bottom_area_height + int(10 * SCALE)
+settlement_area_width = int(750 * SCALE)
+settlement_area_height = bottom_area_height - int(20 * SCALE)
 
+#游戏ui图
+ui_back="assets/ui/back2.png"
+ui_settlement="assets/ui/back3.png"
+ui_background="assets/ui/back.png"
+ui_blood="assets/ui/Blood.png"
+ui_bottleBack="assets/ui/Bottle1.png"
+ui_bottlefront="assets/ui/Bottle2.png"
+ui_front="assets/ui/Front.png"
+ui_headL="assets/ui/Head1.png"
+ui_headR="assets/ui/Head2.png"
 
+# UI图片统一管理字典（含显示坐标和缩放比例）
+UI_IMAGES = {
+    "background": {"path": ui_background, "pos": (0, 0), "scale": 0.9},
+    "back": {"path": ui_back, "pos": (0, -70), "scale": 0.9},
+    "settlement": {"path": ui_settlement, "pos": (0, -70), "scale": 0.9},
+    "bottleBack": {"path": ui_bottleBack, "pos": (0, 400), "scale": 0.9},
+    "blood": {"path": ui_blood, "pos": (0,400), "scale": 0.9},
+    "bottlefront": {"path": ui_bottlefront, "pos": (0, 400), "scale": 0.9},
+    "front": {"path": ui_front, "pos": (0, 0), "scale": 0.85},
+    "headL": {"path": ui_headL, "pos": (0, 0), "scale": 0.9},
+    "headR": {"path": ui_headR, "pos": (-120,0), "scale": 0.9},
+
+}
 
 
 

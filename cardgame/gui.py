@@ -5,7 +5,6 @@ from config import *
 from typing import Tuple, Optional, Dict
 from game import Game
 from card import Card
-from start_menu import StartMenu
 
 
 # 资源管理类
@@ -167,10 +166,10 @@ class GameGUI:
 
         # 结算区域（左侧）
         self.settlement_area_rect = pygame.Rect(
-            340,  # 左侧，增加边距
-            self.screen_height - self.bottom_area_height + 10,  # 增加上边距
-            500,  # 增加宽度
-            self.bottom_area_height - 20  # 高度
+            settlement_area_x,
+            settlement_area_y,
+            settlement_area_width,
+            settlement_area_height
         )
 
         # 生命值区域（中间）
@@ -204,6 +203,17 @@ class GameGUI:
         # 加载背景
         self.background = pygame.Surface((self.screen_width, self.screen_height))
         self.background.fill(COLORS['WHITE'])
+
+        # 加载UI图片（批量加载，修正path获取方式）
+        self.ui_images = {}
+        for key, info in UI_IMAGES.items():
+            path = info["path"]
+            try:
+                img = pygame.image.load(path).convert_alpha()
+                self.ui_images[key] = img
+            except Exception as e:
+                print(f"加载UI图片失败: {key} - {path}，错误：{e}")
+                self.ui_images[key] = None
 
         # 加载卡牌背面
         self.card_back_img = pygame.image.load(back_card).convert_alpha()
@@ -453,42 +463,16 @@ class GameGUI:
 
     def draw_settlement_area(self):
         """绘制结算区域"""
-        # 绘制结算区域背景
-        pygame.draw.rect(self.screen, COLORS['GRAY'], self.settlement_area_rect)
-        pygame.draw.rect(self.screen, COLORS['BLACK'], self.settlement_area_rect, 2)
+        # # 绘制结算区域背景
+        # pygame.draw.rect(self.screen, COLORS['GRAY'], self.settlement_area_rect)
+        # pygame.draw.rect(self.screen, COLORS['BLACK'], self.settlement_area_rect, 2)
+        #
+        # # 绘制标题
+        # title_text = self.font.render("结算区域", True, COLORS['BLACK'])
+        # title_rect = title_text.get_rect(center=(self.settlement_area_rect.centerx,
+        #                                        self.settlement_area_rect.top + 30))
+        # self.screen.blit(title_text, title_rect)
 
-        # 绘制标题
-        title_text = self.font.render("结算区域", True, COLORS['BLACK'])
-        title_rect = title_text.get_rect(center=(self.settlement_area_rect.centerx, 
-                                               self.settlement_area_rect.top + 30))
-        self.screen.blit(title_text, title_rect)
-
-        # 绘制结算区域中的卡牌
-        for i, card in enumerate(self.game.settlement_area):
-            x = self.settlement_area_rect.x + 20 + (i % 2) * 120
-            y = self.settlement_area_rect.y + 60 + (i // 2) * 160
-            self.draw_card(card, x, y, 0.8)
-
-        # 绘制结算统计信息
-        summary = self.game.get_settlement_summary()
-        y_offset = self.settlement_area_rect.bottom - 150
-        
-        # 攻击值
-        attack_text = self.font.render(f"Attack: {summary['attack']}", True, COLORS['RED'])
-        self.screen.blit(attack_text, (self.settlement_area_rect.x + 20, y_offset))
-        
-        # 防御值
-        defense_text = self.font.render(f"Defense: {summary['defense']}", True, COLORS['BLUE'])
-        self.screen.blit(defense_text, (self.settlement_area_rect.x + 20, y_offset + 40))
-        
-        # 治疗值
-        heal_text = self.font.render(f"Heal: {summary['heal']}", True, COLORS['GREEN'])
-        self.screen.blit(heal_text, (self.settlement_area_rect.x + 20, y_offset + 80))
-
-        # 如果有诅咒卡，显示警告
-        if summary['has_curse']:
-            curse_text = self.font.render("Curse Active!", True, COLORS['RED'])
-            self.screen.blit(curse_text, (self.settlement_area_rect.x + 20, y_offset + 120))
 
     def add_effect(self, effect_type: str, value: int, position: Tuple[int, int]):
         """添加视觉效果"""
@@ -500,59 +484,48 @@ class GameGUI:
             'alpha': 255
         })
 
-    def draw_effects(self):
-        """绘制视觉效果"""
-        current_time = pygame.time.get_ticks()
-        new_effects = []
-        
-        for effect in self.effects:
-            elapsed = current_time - effect['start_time']
-            if elapsed < self.effect_duration:
-                # 计算效果的透明度
-                alpha = int(255 * (1 - elapsed / self.effect_duration))
-                # 计算上升的位置
-                y_offset = int(elapsed / self.effect_duration * 50)
-                
-                # 创建文本
-                if effect['type'] == 'damage':
-                    color = COLORS['RED']
-                    text = f"-{effect['value']}"
-                elif effect['type'] == 'heal':
-                    color = COLORS['GREEN']
-                    text = f"+{effect['value']}"
-                elif effect['type'] == 'defense':
-                    color = COLORS['BLUE']
-                    text = f"+{effect['value']}"
-                
-                # 渲染文本
-                text_surface = self.font.render(text, True, color)
-                text_surface.set_alpha(alpha)
-                
-                # 绘制文本
-                pos = (effect['position'][0], effect['position'][1] - y_offset)
-                self.screen.blit(text_surface, pos)
-                
-                new_effects.append(effect)
-        
-        self.effects = new_effects
+
 
     def draw(self):
         """绘制整个游戏界面"""
-        # 绘制背景
-        self.screen.blit(self.background, (0, 0))
+        # 优先绘制UI背景（如有）
+        if self.ui_images.get("background"):
+            self.screen.blit(self.ui_images["background"], (0, 0))
+        else:
+            self.screen.blit(self.background, (0, 0))
+
+        # 自动绘制所有UI图片（除background）
+        for key, info in UI_IMAGES.items():
+            if key == "background":
+                continue
+            img = self.ui_images.get(key)
+            if img:
+                pos = info.get("pos", (0, 0))
+                scale = info.get("scale", 1.0)
+                if scale != 1.0:
+                    w, h = img.get_width(), img.get_height()
+                    img = pygame.transform.smoothscale(img, (int(w*scale), int(h*scale)))
+                self.screen.blit(img, pos)
 
         # 绘制所有牌堆
         for i, pile in enumerate(self.game.piles):
             self.draw_pile(i, pile)
 
         # 绘制底部区域（包含生命值、遗物和结算区域）
-        self.draw_bottom_area()
+        # self.draw_bottom_area()
 
         # 绘制正在拖拽的卡牌
         self.draw_dragging_card()
 
-        # 绘制视觉效果
-        self.draw_effects()
+
+
+        # --- 新增：右上角绘制诅咒牌总值 ---
+        total_curse = self.game.get_total_curse_value()
+        curse_font = self.font
+        curse_text = curse_font.render(f"curse total: {total_curse}", True, (255, 0, 0))
+        text_x = self.screen_width - curse_text.get_width() - 30
+        text_y = 30
+        self.screen.blit(curse_text, (text_x, text_y))
 
         pygame.display.flip()
 
@@ -713,3 +686,6 @@ class GameGUI:
 
         pygame.quit()
         sys.exit()
+
+
+

@@ -32,4 +32,10 @@ class Pile:
             self.face_up_cards.append(self.cards[-1])
             
     def __len__(self):
-        return len(self.cards) 
+        return len(self.cards)
+
+    def add_card_to_bottom(self, card: Card):
+        """将卡牌插入牌堆底部"""
+        self.cards.insert(0, card)
+        if card.face_up:
+            self.face_up_cards.insert(0, card) 

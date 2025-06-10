@@ -107,10 +107,12 @@ class Game:
         defense_cards = [c for c in cards if c.type == 'defense']
         other_cards = [c for c in cards if c.type not in ('curse', 'attack', 'defense')]
         msg_list = []
-        # 1. 处理诅咒卡：只加入结算区，不立即扣血
+
+        # 1. 处理诅咒卡：加入结算区
         if curse_cards:
             self.settlement_area.extend(curse_cards)
             msg_list.append(f"拖入{len(curse_cards)}张诅咒卡，等待结算。")
+
         # 2. 处理防御+攻击卡（与结算区已有诅咒卡互动）
         exist_curse = [c for c in self.settlement_area if c.type == 'curse']
         if defense_cards or attack_cards:
@@ -138,8 +140,10 @@ class Game:
                     returned_curse.append(curse)
             # 更新结算区，移除被消灭和返回的诅咒卡
             self.settlement_area = [c for c in self.settlement_area if c.type != 'curse']
+            # --- 修改：返回的诅咒卡放入随机牌堆底部 ---
             for curse in returned_curse:
-                self.piles[0].add_card(curse)
+                random_pile = random.choice(self.piles)
+                random_pile.add_card_to_bottom(curse)
             # 玩家只扣未被抵消/消灭的诅咒牌的总和
             total_damage = sum(c.value for c in returned_curse)
             if removed_by_defense:
@@ -149,11 +153,22 @@ class Game:
             if returned_curse:
                 if total_damage > 0:
                     self.player.take_damage(total_damage)
-                    msg_list.append(f"仍有{len(returned_curse)}张诅咒卡未被消灭，已返回牌堆，受到{total_damage}点伤害。")
+                    msg_list.append(f"仍有{len(returned_curse)}张诅咒卡未被消灭，已返回随机牌堆，受到{total_damage}点伤害。")
                 else:
-                    msg_list.append(f"仍有{len(returned_curse)}张诅咒卡未被消灭，已返回牌堆。")
+                    msg_list.append(f"仍有{len(returned_curse)}张诅咒卡未被消灭，已返回随机牌堆。")
             if not (removed_by_defense or removed_by_attack or returned_curse):
                 msg_list.append("结算区没有诅咒卡，无需结算。")
+        # --- 新增：只拖入诅咒牌时也立即结算 ---
+        elif curse_cards:
+            # 只拖入诅咒牌，全部返回随机牌堆底部并扣血
+            total_damage = sum(c.value for c in curse_cards)
+            for curse in curse_cards:
+                random_pile = random.choice(self.piles)
+                random_pile.add_card_to_bottom(curse)
+            self.settlement_area = [c for c in self.settlement_area if c.type != 'curse']
+            if total_damage > 0:
+                self.player.take_damage(total_damage)
+                msg_list.append(f"诅咒卡直接结算，已返回随机牌堆，受到{total_damage}点伤害。")
         # 其他卡牌（如治疗）
         for card in other_cards:
             if card.type == 'heal':
@@ -163,4 +178,11 @@ class Game:
             return True, ' '.join(msg_list)
         else:
             return False, "未产生结算效果。"
+
+    def get_total_curse_value(self) -> int:
+        """统计所有牌堆中诅咒牌的数值总和"""
+        total = 0
+        for pile in self.piles:
+            total += sum(card.value for card in pile.cards if card.type == 'curse')
+        return total
 
