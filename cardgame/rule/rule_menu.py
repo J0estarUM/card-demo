@@ -22,52 +22,46 @@ class RuleMenu:
 
     # 规则文本版本
     RULE_TEXTS = [
-        """
-            ░ 远古的罪 ░
-        第五纪元末日降临，天空燃烧，大地崩解，众神弃世。
-        那一夜，黑塔从地心升起，携带着七十二封印中最深的一道——【诅咒之契】。
-        
-        众生哀嚎、魂灵消散，唯有一人——你，被"塔楼记录者"选中，成为夜行者。
-        
-        你不是来拯救世界的。你是来完成仪式的。
-        """,
-        """
-           ░ 诅咒之力 ░
-传说中，每一张卡牌，都是陨落灵魂的哀号残片。
-当你抽出这些牌，你不仅是在作战，更是在唤醒诅咒本源。
-
-进攻牌：以血还血，以刃驱散恐惧。
-
-防御牌：承载意志的壁垒，抵御灵魂的侵蚀。
-
-生命牌：从腐朽中汲取残存的温度。
-
-诅咒牌：最为危险，亦最为关键。它们是敌人，也是你通往终点的“祭品”。
-
-每一次面对诅咒，你都必须做出选择：驱散它，或接受它。
-每当你击败一张诅咒卡，你可选择将它吞噬——将其转化为诅咒值。
-
-只有当你吞噬足够多的诅咒之力——达到52点诅咒值，你才能进入黑塔之巅，完成仪式，结束这一切。
-**代价是什么？**没人知道。也许是灵魂的永坠，也许是整个世界的重构。
-        """,
-        """
-░ 仪式的代价 ░
-52夜，52次考验，52次决断。
-
-你会获得遗物，它们会给予你力量，也会慢慢侵蚀你的心智。
-你会获得卡牌，它们会组成你的武装，也可能成为你败亡的根源。
-你会遇见影子般的灵体，那是曾失败的夜行者残魂，他们会低语，会试图阻止你继续前进。
-
-因为——
-这个世界，并不希望你成功。
-成功的代价，是打破封印；而封印的背后，埋藏的是最初的真相。
+"""
+世界已经崩坏了.
 """,
 """
-░ 结语 ░
-你要达成的，不是救赎。是完成这场无法中断的仪式。
-用52点诅咒值，打开那扇封印的大门——
-黑塔之巅，等你到来。
+在过去的一场灾难中，诅咒如瘟疫般蔓延，吞噬了时间.生命和希望.
+幸存者们说，这一切源于那座塔
+诅咒之塔.
+""",
 """
+没人知道它从哪里来，但自从它出现后，世界开始被黑暗吞噬，
+每过一个夜晚，就有更多的人被夺走.
+""",
+"""
+现在,只剩下52个夜晚.
+""",
+"""
+你是最后的执行者,被选中进入塔内完成多次危险的仪式
+收集足够的诅咒之力,总值达到52点,唤醒沉睡在塔中的真相.
+""",
+"""
+你要摸清靠卡牌作战,每一张牌都是你的工具.武器,或代价.
+攻击牌...打击敌人,削弱诅咒.
+防御牌...抵御伤害,保护自己.
+生命牌...回复生命,延续存活.
+诅咒牌...它们是敌人,但也是完成仪式的关键.
+每一张诅咒牌可以对你同时展开攻击和防御的双重效果，
+""",
+"""
+还有一些神秘的规则需要你自己摸索.
+"""
+"""
+在每一场战斗中，你必须选择
+是摧毁诅咒，还是接受它，成为你的一部分.
+你越强大，诅咒也会越靠近你.
+""",
+"""
+当时间逝去，末日降临，你将前往塔顶，面对最终的审判.
+没有人知道，走到最后的人，会看到什么.
+"""
+
     ]
 
     def __init__(self, screen: pygame.Surface, return_to_game: Callable[[], None] = None):
@@ -134,15 +128,21 @@ class RuleMenu:
         # 设置字体
         font = pygame.font.Font("assets/font/IPix.ttf", int(self.TEXT_FONT_SIZE))
         
-        # 绘制规则文本
-        current_y = self.TEXT_Y_OFFSET
-        for line in self.rules_text.split('\n'):
-            if line.strip():  # 只绘制非空行
-                text_surface = font.render(line, True, self.TEXT_COLOR)
-                text_rect = text_surface.get_rect()
-                text_rect.topleft = (self.TEXT_X_OFFSET, current_y)
-                self.screen.blit(text_surface, text_rect)
-                current_y += self.TEXT_LINE_HEIGHT
+        # 拆分文本行
+        lines = [line for line in self.rules_text.split('\n') if line.strip()]
+        # 计算总高度
+        total_height = len(lines) * self.TEXT_LINE_HEIGHT
+        # 计算起始y，使文本整体垂直居中
+        start_y = (screen_height - total_height) // 2
+
+        for i, line in enumerate(lines):
+            text_surface = font.render(line, True, self.TEXT_COLOR)
+            text_rect = text_surface.get_rect()
+        # 设置x为水平居中
+            text_rect.centerx = screen_width // 2
+        # 设置y为整体垂直居中
+            text_rect.y = start_y + i * self.TEXT_LINE_HEIGHT
+            self.screen.blit(text_surface, text_rect)
     
     def update_loading(self):
         # 先绘制背景
