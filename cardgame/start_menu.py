@@ -2,6 +2,8 @@ import pygame
 import sys
 from config import *
 import time
+from rule.rule_menu import RuleMenu
+from music_handler import music_handler
 
 class StartMenu:
     def __init__(self, screen):
@@ -13,15 +15,18 @@ class StartMenu:
         self.loadgame_btn_img = None
         self.loadgame_img = None
         self.loadgame_btn_rect = None
+        self.rule_btn_img = None
+        self.rule_img = None
+        self.rule_btn_rect = None
         self.title_img = None
         self.cloud1_img = None
         self.cloud2_img = None
         self.stars_img = None
-        self.cloud1_pos = list(CLOUD1_IMG_OFFSET)  # [x, y]
-        self.cloud2_pos = None  # 右下角云朵的动态位置
         self.loading_img = None
         self.eye_img = None
         self.juhao_img = None
+        self.cloud1_pos = list(CLOUD1_IMG_OFFSET)  # [x, y]
+        self.cloud2_pos = None  # 右下角云朵的动态位置
         self.load_assets()
         # 初始化cloud2的起始位置
         if self.cloud2_img:
@@ -61,6 +66,20 @@ class StartMenu:
             self.loadgame_btn_img = pygame.Surface(START_BTN_SIZE, pygame.SRCALPHA)
             self.loadgame_btn_img.fill((180, 180, 180, 220))
         self.loadgame_btn_rect = self.loadgame_btn_img.get_rect(center=(screen_width//2, screen_height//2+100))
+        # 加载rule按钮图片
+        try:
+            self.rule_btn_img = pygame.image.load(BTN_IMG).convert_alpha()
+            self.rule_btn_img = pygame.transform.smoothscale(self.rule_btn_img, START_BTN_SIZE)
+        except Exception as e:
+            self.rule_btn_img = pygame.Surface(START_BTN_SIZE, pygame.SRCALPHA)
+            self.rule_btn_img.fill((150, 150, 200, 220))
+        self.rule_btn_rect = self.rule_btn_img.get_rect(center=(screen_width//2, screen_height//2+200))
+        # 加载rule字样图片
+        try:
+            self.rule_img = pygame.image.load(RULE_IMG).convert_alpha()
+            self.rule_img = pygame.transform.smoothscale(self.rule_img, START_BTN_SIZE)
+        except Exception as e:
+            self.rule_img = None
         # 加载load game字样图片
         try:
             self.loadgame_img = pygame.image.load(LOADGAME_IMG).convert_alpha()
@@ -91,49 +110,9 @@ class StartMenu:
             self.stars_img = pygame.transform.smoothscale(self.stars_img, STARS_IMG_SIZE)
         except Exception as e:
             self.stars_img = None
-        # 加载loading图片
-        try:
-            self.loading_img = pygame.image.load(LOADING_IMG).convert_alpha()
-            self.loading_img = pygame.transform.smoothscale(self.loading_img, LOADING_IMG_SIZE)
-        except Exception as e:
-            self.loading_img = None
-        try:
-            self.eye_img=pygame.image.load(eye_img).convert_alpha()
-            self.eye_img=pygame.transform.smoothscale(self.eye_img, eye_img_size)
-        except Exception as e:
-            self.eye_img = None
-        # 加载juhao省略号图片
-        try:
-            self.juhao_img = pygame.image.load(JUHAO_IMG).convert_alpha()
-            self.juhao_img = pygame.transform.smoothscale(self.juhao_img, JUHAO_IMG_SIZE)
-        except Exception as e:
-            self.juhao_img = None
-
-    def show_loading(self):
-        start_time = time.time()
-        font = pygame.font.SysFont('SimHei', 48)
-        while time.time() - start_time < LOADING_DURATION:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
-            self.screen.blit(self.bg_img, (0, 0))
-            if self.loading_img:
-                rect = self.loading_img.get_rect(center=(screen_width//2, screen_height//2))
-                self.screen.blit(self.loading_img, rect)
-            if self.eye_img:
-                rect=self.eye_img.get_rect(center=(screen_width//2, screen_height//2))
-                self.screen.blit(self.eye_img, rect)
-            # 依次绘制三个省略号
-            if self.juhao_img:
-                for i in range(3):
-                    juhao_x = screen_width//2+JUHAO_IMG_OFFSET[0] + i * (JUHAO_IMG_SIZE[0] + JUHAO_IMG_GAP)
-                    juhao_y = screen_height//2+JUHAO_IMG_SIZE[1] // 2 + JUHAO_IMG_OFFSET[1]
-                    self.screen.blit(self.juhao_img, (juhao_x, juhao_y))
-            pygame.display.flip()
-            pygame.time.delay(30)
 
     def run(self):
+        music_handler.play_music("assets/music/home+rules.mp3", loop=True)
         running = True
         clock = pygame.time.Clock()
         while running:
@@ -143,10 +122,13 @@ class StartMenu:
                     sys.exit()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if self.btn_rect.collidepoint(event.pos):
-                        self.show_loading()  # 播放加载动画
                         running = False
                     elif self.loadgame_btn_rect.collidepoint(event.pos):
                         print("点击了Load Game按钮")
+                    elif self.rule_btn_rect.collidepoint(event.pos):
+                        rule_menu = RuleMenu(self.screen)
+                        rule_menu.run()
+                        rule_menu.cleanup()  # 清理资源
 
             # --- 云朵移动逻辑 ---
             # 云1向右移动
@@ -188,5 +170,13 @@ class StartMenu:
                     self.loadgame_btn_rect.centery + offset_y
                 ))
                 self.screen.blit(self.loadgame_img, loadgame_rect)
+            self.screen.blit(self.rule_btn_img, self.rule_btn_rect)
+            if self.rule_img:
+                offset_x, offset_y = RULE_TEXT_OFFSET
+                rule_rect = self.rule_img.get_rect(center=(
+                    self.rule_btn_rect.centerx + offset_x,
+                    self.rule_btn_rect.centery + offset_y
+                ))
+                self.screen.blit(self.rule_img, rule_rect)
             pygame.display.flip()
-            clock.tick(60) 
+            clock.tick(60)
