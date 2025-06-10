@@ -15,9 +15,6 @@ class StartMenu:
         self.loadgame_btn_img = None
         self.loadgame_img = None
         self.loadgame_btn_rect = None
-        self.rule_btn_img = None
-        self.rule_img = None
-        self.rule_btn_rect = None
         self.title_img = None
         self.cloud1_img = None
         self.cloud2_img = None
@@ -66,20 +63,7 @@ class StartMenu:
             self.loadgame_btn_img = pygame.Surface(START_BTN_SIZE, pygame.SRCALPHA)
             self.loadgame_btn_img.fill((180, 180, 180, 220))
         self.loadgame_btn_rect = self.loadgame_btn_img.get_rect(center=(screen_width//2, screen_height//2+100))
-        # 加载rule按钮图片
-        try:
-            self.rule_btn_img = pygame.image.load(BTN_IMG).convert_alpha()
-            self.rule_btn_img = pygame.transform.smoothscale(self.rule_btn_img, START_BTN_SIZE)
-        except Exception as e:
-            self.rule_btn_img = pygame.Surface(START_BTN_SIZE, pygame.SRCALPHA)
-            self.rule_btn_img.fill((150, 150, 200, 220))
-        self.rule_btn_rect = self.rule_btn_img.get_rect(center=(screen_width//2, screen_height//2+200))
-        # 加载rule字样图片
-        try:
-            self.rule_img = pygame.image.load(RULE_IMG).convert_alpha()
-            self.rule_img = pygame.transform.smoothscale(self.rule_img, START_BTN_SIZE)
-        except Exception as e:
-            self.rule_img = None
+
         # 加载load game字样图片
         try:
             self.loadgame_img = pygame.image.load(LOADGAME_IMG).convert_alpha()
@@ -170,13 +154,6 @@ class StartMenu:
                     self.loadgame_btn_rect.centery + offset_y
                 ))
                 self.screen.blit(self.loadgame_img, loadgame_rect)
-            self.screen.blit(self.rule_btn_img, self.rule_btn_rect)
-            if self.rule_img:
-                offset_x, offset_y = RULE_TEXT_OFFSET
-                rule_rect = self.rule_img.get_rect(center=(
-                    self.rule_btn_rect.centerx + offset_x,
-                    self.rule_btn_rect.centery + offset_y
-                ))
-                self.screen.blit(self.rule_img, rule_rect)
+
             pygame.display.flip()
             clock.tick(60)

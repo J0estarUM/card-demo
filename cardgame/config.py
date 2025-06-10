@@ -77,10 +77,6 @@ LOADING_IMG = "assets/backgrounds/loading.png"
 LOADING_DURATION = 2.5  # 加载动画时长（秒）
 LOADING_IMG_SIZE = (1500, 800)  # 加载动画图片缩放尺寸
 
-JUHAO_IMG = "assets/backgrounds/juhao1.png"
-JUHAO_IMG_SIZE = (1500, 800)  # 省略号图片缩放尺寸
-JUHAO_IMG_OFFSET = (-750, -800)  # 第一个省略号相对loading文字的偏移
-JUHAO_IMG_GAP = -1450 # 每个省略号之间的间距
 
 # 颜色定义
 COLORS = {

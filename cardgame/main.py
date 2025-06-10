@@ -22,8 +22,8 @@ def main():
     RuleMenu(screen, return_to_game).run()
     
     # 游戏结束后显示结算界面
-    from gui import EndMenu
-    EndMenu(screen, gui.game).run()
+    # from gui import EndMenu
+    # EndMenu(screen, gui.game).run()
 
 if __name__ == "__main__":
     main()
