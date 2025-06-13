@@ -3,16 +3,12 @@ from pygame.locals import *
 from typing import Callable
 import time
 from music_handler import music_handler
-from config import screen_width, screen_height, START_BTN_SIZE, SCALE
+from config import screen_width, screen_height, SCALE
+from rule.loading import LoadingScreen
+from rule.difficulty import DifficultyMenu
 
 # 定义规则菜单类
 class RuleMenu:
-    LOADING_DURATION = 4  # 加载动画持续时间（秒）
-
-    # 加载动画配置
-    LOADING_IMG = "assets/backgrounds/loading1.png"
-    LOADING_IMG_SIZE = (1200 , 600)  # 根据缩放比例调整尺寸
-
     # 文字配置
     TEXT_X_OFFSET = 100 * SCALE  # 根据缩放比例调整
     TEXT_Y_OFFSET = 200 * SCALE  # 根据缩放比例调整
@@ -64,15 +60,14 @@ class RuleMenu:
 
     ]
 
-    def __init__(self, screen: pygame.Surface, return_to_game: Callable[[], None] = None):
+    def __init__(self, screen: pygame.Surface, start_game: Callable[[], None] = None):
         self.screen = screen
-        self.return_to_game = return_to_game  # 返回游戏的回调函数
+        self.start_game = start_game  # 返回游戏的回调函数
         self.running = True
         self.current_text_index = 0  # 初始化文本索引
        
         self.loading = False 
         self.bg_img = None
-        self.loading_img = None
         self.eye_img = None
         self.juhao_img = None
         self.font = None
@@ -88,16 +83,6 @@ class RuleMenu:
             self.bg_img = pygame.Surface((screen_width, screen_height))
             self.bg_img.fill((30, 60, 120))
             print(f"Failed to load background image: {e}")
-        
-        # 加载loading图片
-        try:
-            self.loading_img = pygame.image.load(self.LOADING_IMG).convert_alpha()
-            self.loading_img = pygame.transform.smoothscale(self.loading_img, self.LOADING_IMG_SIZE)
-            print(f"Loading image loaded successfully: {self.loading_img.get_size()}")
-        except Exception as e:
-            print(f"Failed to load loading image: {e}")
-            self.loading_img = None
-        
         
         # 设置字体
         try:
@@ -118,10 +103,7 @@ class RuleMenu:
                     self.current_text_index += 1
                     self.rules_text = self.RULE_TEXTS[self.current_text_index]
                 else:
-                    # 不直接播放加载动画，只是设置状态，留给主循环处理
-                    self.loading = True
-                    self.loading_start_time = time.time()
-
+                   self.show_difficulty()
     def update(self):
         """更新界面"""
         self.screen.blit(self.bg_img, (0, 0))     
@@ -143,20 +125,18 @@ class RuleMenu:
         # 设置y为整体垂直居中
             text_rect.y = start_y + i * self.TEXT_LINE_HEIGHT
             self.screen.blit(text_surface, text_rect)
-    
-    def update_loading(self):
-        # 先绘制背景
-        self.screen.blit(self.bg_img, (0, 0))
+
+    def show_difficulty(self):
+        """显示难度选择界面"""
+        difficulty = DifficultyMenu(self.screen)
+        difficulty.run()
         
-        # 如果loading_img加载成功，绘制loading动画
-        if self.loading_img:
-            rect = self.loading_img.get_rect(center=(screen_width // 2, screen_height // 2))
-            self.screen.blit(self.loading_img, rect)
+        # 难度选择后显示加载动画
+        loading_screen = LoadingScreen(self.screen, self.start_game)
+        loading_screen.run()    
         
-        # 播放加载音乐
-        if not hasattr(self, "_loading_music_played"):
-            music_handler.play_music("assets/music/loading.mp3",False)
-            self._loading_music_played = True
+        # 结束规则界面
+        self.running = False
 
     def run(self):
         clock = pygame.time.Clock()
@@ -167,22 +147,11 @@ class RuleMenu:
                     self.running = False
                     break
 
-            if self.loading:
-                self.update_loading()
-                if time.time() - self.loading_start_time > RuleMenu.LOADING_DURATION:
-                    self.running = False
-            else:
                 self.handle_events(events)
-                if self.loading:
-                    if hasattr(self, "_loading_music_played"):
-                        del self._loading_music_played
-                self.update()  # 只在非loading状态下更新规则界面
+                self.update()
 
             pygame.display.flip()
             
-
-        if self.return_to_game:
-            self.return_to_game()
 
     def cleanup(self):
         """清理资源"""

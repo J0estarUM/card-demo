@@ -32,6 +32,12 @@ class StartMenu:
                 screen_width - CLOUD2_IMG_OFFSET[0] - cloud2_rect.width,
                 screen_height - CLOUD2_IMG_OFFSET[1] - cloud2_rect.height
             ]
+        def __init__(self, screen):
+            self.screen = screen
+            self.start_game = start_game  # 将参数重命名并赋值给实例变量
+            self.running = True
+            self.current_text_index = 0
+            self.load_assets()
 
     def load_assets(self):
         # 加载背景

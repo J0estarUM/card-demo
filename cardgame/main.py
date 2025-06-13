@@ -1,3 +1,4 @@
+from this import d
 import pygame
 from config import screen_width, screen_height
 from game import Game
@@ -5,6 +6,7 @@ from gui import GameGUI
 from start_menu import StartMenu
 from rule.rule_menu import RuleMenu
 from music_handler import music_handler
+from rule.difficulty import DifficultyMenu
 
 def main():
     pygame.init()
@@ -15,11 +17,12 @@ def main():
     game = Game()
     # 创建GUI
     gui = GameGUI(game)
-    # 显示规则界面
-    def return_to_game():
-        """返回到游戏的回调函数"""
+    
+# 显示规则界面
+    def start_game():
         gui.run()
-    RuleMenu(screen, return_to_game).run()
+    
+    RuleMenu(screen, start_game).run()
     
     # 游戏结束后显示结算界面
     # from gui import EndMenu
