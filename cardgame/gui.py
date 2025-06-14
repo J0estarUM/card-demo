@@ -5,6 +5,7 @@ from config import *
 from typing import Tuple, Optional, Dict
 from game import Game
 from card import Card
+from config import UI_IMAGES, BLOOD_MOVE_RANGE
 
 
 # 资源管理类
@@ -489,9 +490,9 @@ class GameGUI:
         else:
             self.screen.blit(self.background, (0, 0))
 
-        # 自动绘制所有UI图片（除background）
+        # 自动绘制所有UI图片（除background、blood、bottleBack、bottlefront，顺序与UI_IMAGES一致）
         for key, info in UI_IMAGES.items():
-            if key == "background":
+            if key in ("background", "blood", "bottleBack", "bottlefront"):
                 continue
             img = self.ui_images.get(key)
             if img:
@@ -501,6 +502,55 @@ class GameGUI:
                     w, h = img.get_width(), img.get_height()
                     img = pygame.transform.smoothscale(img, (int(w*scale), int(h*scale)))
                 self.screen.blit(img, pos)
+
+        # 先绘制bottleBack
+        if "bottleBack" in self.ui_images and self.ui_images["bottleBack"]:
+            info = UI_IMAGES["bottleBack"]
+            img = self.ui_images["bottleBack"]
+            pos = info.get("pos", (0, 0))
+            scale = info.get("scale", 1.0)
+            if scale != 1.0:
+                w, h = img.get_width(), img.get_height()
+                img = pygame.transform.smoothscale(img, (int(w*scale), int(h*scale)))
+            self.screen.blit(img, pos)
+
+        # 再绘制blood（动态下移）
+        if "blood" in self.ui_images and self.ui_images["blood"]:
+            blood_img = self.ui_images["blood"]
+            info = UI_IMAGES["blood"]
+            base_x, base_y = info["pos"]
+            scale = info.get("scale", 1.0)
+            if scale != 1.0:
+                w, h = blood_img.get_width(), blood_img.get_height()
+                blood_img = pygame.transform.smoothscale(blood_img, (int(w*scale), int(h*scale)))
+            hp = self.game.player.hp
+            max_hp = self.game.player.max_hp
+            move_offset = int((1 - hp / max_hp) * BLOOD_MOVE_RANGE)
+            blood_rect = blood_img.get_rect()
+            blood_rect.topleft = (base_x, base_y + move_offset)
+            self.screen.blit(blood_img, blood_rect)
+
+        # 再绘制bottlefront
+        if "bottlefront" in self.ui_images and self.ui_images["bottlefront"]:
+            info = UI_IMAGES["bottlefront"]
+            img = self.ui_images["bottlefront"]
+            pos = info.get("pos", (0, 0))
+            scale = info.get("scale", 1.0)
+            if scale != 1.0:
+                w, h = img.get_width(), img.get_height()
+                img = pygame.transform.smoothscale(img, (int(w*scale), int(h*scale)))
+            self.screen.blit(img, pos)
+
+        # front图片始终在bottleBack、blood、bottlefront之上
+        if "front" in self.ui_images and self.ui_images["front"]:
+            info = UI_IMAGES["front"]
+            img = self.ui_images["front"]
+            pos = info.get("pos", (0, 0))
+            scale = info.get("scale", 1.0)
+            if scale != 1.0:
+                w, h = img.get_width(), img.get_height()
+                img = pygame.transform.smoothscale(img, (int(w*scale), int(h*scale)))
+            self.screen.blit(img, pos)
 
         # 绘制所有牌堆
         for i, pile in enumerate(self.game.piles):

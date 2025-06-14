@@ -171,6 +171,9 @@ HP_FONT_SIZE = 32  # 字体大小
 HP_COLOR = (220, 20, 60)  # 红色
 HP_POS = (160, SCREEN_HEIGHT - 450)  # 左下角偏移
 
+# 血量图片下移幅度参数（血量为0时最大下移多少像素）
+BLOOD_MOVE_RANGE = 300  # 可根据需要调整
+
 
 
 
