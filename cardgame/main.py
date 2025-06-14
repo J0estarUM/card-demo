@@ -12,7 +12,7 @@ def main():
     pygame.init()
     screen = pygame.display.set_mode((screen_width, screen_height))
     # 先显示开始界面
-    StartMenu(screen).run()
+    # StartMenu(screen).run()
     # 创建游戏实例
     game = Game()
     # 创建GUI

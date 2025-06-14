@@ -154,14 +154,22 @@ UI_IMAGES = {
     "background": {"path": ui_background, "pos": (0, 0), "scale": 0.9},
     "back": {"path": ui_back, "pos": (0, -70), "scale": 0.9},
     "settlement": {"path": ui_settlement, "pos": (0, -70), "scale": 0.9},
-    "bottleBack": {"path": ui_bottleBack, "pos": (0, 400), "scale": 0.9},
-    "blood": {"path": ui_blood, "pos": (0,400), "scale": 0.9},
-    "bottlefront": {"path": ui_bottlefront, "pos": (0, 400), "scale": 0.9},
+    "bottleBack": {"path": ui_bottleBack, "pos": (50, 500), "scale": 0.7},
+    "blood": {"path": ui_blood, "pos": (50, 500), "scale": 0.7},
+    "bottlefront": {"path": ui_bottlefront, "pos": (50, 500), "scale": 0.7},
     "front": {"path": ui_front, "pos": (0, 0), "scale": 0.85},
     "headL": {"path": ui_headL, "pos": (0, 0), "scale": 0.9},
     "headR": {"path": ui_headR, "pos": (-120,0), "scale": 0.9},
 
 }
+
+# 血量上限
+MAX_HEALTH = 10  # 可根据需要修改
+
+# 血量数值显示参数
+HP_FONT_SIZE = 32  # 字体大小
+HP_COLOR = (220, 20, 60)  # 红色
+HP_POS = (160, SCREEN_HEIGHT - 450)  # 左下角偏移
 
 
 

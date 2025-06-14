@@ -423,11 +423,6 @@ class GameGUI:
         pygame.draw.rect(self.screen, COLORS['WHITE'], self.hp_area_rect)
         pygame.draw.rect(self.screen, COLORS['BLACK'], self.hp_area_rect, 2)
         
-        # 绘制生命值
-        hp_text = self.title_font.render(f"HP: {self.game.player.hp}/{self.game.player.max_hp}", True, COLORS['BLACK'])
-        hp_rect = hp_text.get_rect(center=self.hp_area_rect.center)
-        self.screen.blit(hp_text, hp_rect)
-
         # 绘制遗物区域
         pygame.draw.rect(self.screen, COLORS['WHITE'], self.relic_area_rect)
         pygame.draw.rect(self.screen, COLORS['BLACK'], self.relic_area_rect, 2)
@@ -517,16 +512,12 @@ class GameGUI:
         # 绘制正在拖拽的卡牌
         self.draw_dragging_card()
 
-
-
-        # --- 新增：右上角绘制诅咒牌总值 ---
-        total_curse = self.game.get_total_curse_value()
-        curse_font = self.font
-        curse_text = curse_font.render(f"curse total: {total_curse}", True, (255, 0, 0))
-        text_x = self.screen_width - curse_text.get_width() - 30
-        text_y = 30
-        self.screen.blit(curse_text, (text_x, text_y))
-
+        # --- 新增：左下角血量数值绘制放到最后，确保不被遮挡 ---
+        # 注意player对象的血量属性为hp，最大血量为max_hp
+        hp_font = pygame.font.SysFont(None, HP_FONT_SIZE)
+        hp_text = hp_font.render(f"HP: {self.game.player.hp}/{self.game.player.max_hp}", True, HP_COLOR)
+        self.screen.blit(hp_text, HP_POS)
+        
         pygame.display.flip()
 
     def handle_mouse_motion(self, pos: Tuple[int, int]):

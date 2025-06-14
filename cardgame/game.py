@@ -3,10 +3,11 @@ import random
 from card import Card
 from pile import Pile
 from player import Player
+from config import MAX_HEALTH
 
 class Game:
     def __init__(self):
-        self.player = Player()
+        self.player = Player(max_hp=MAX_HEALTH)
         self.piles = [Pile() for _ in range(6)]  # 6个牌堆
         self.active_curse = None  # 当前激活的诅咒卡
         self.defense_cards = []  # 防御卡
