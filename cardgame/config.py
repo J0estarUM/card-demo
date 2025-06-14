@@ -182,6 +182,10 @@ SETTLEMENT_DISPLAY_COLS = 5      # 每行展示几张卡牌
 SETTLEMENT_DISPLAY_X_SPACING = 120  # 横向间距
 SETTLEMENT_DISPLAY_Y_SPACING = 160  # 纵向间距
 
+# headL/headR运动幅度参数
+HEAD_MOVE_X = 20  # headL/headR水平方向最大偏移像素
+HEAD_MOVE_Y = 16  # headL/headR垂直方向最大偏移像素
+
 
 
 

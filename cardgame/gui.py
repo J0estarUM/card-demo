@@ -2,11 +2,12 @@ import pygame
 import sys
 import os
 import time
+import math
 from config import *
 from typing import Tuple, Optional, Dict
 from game import Game
 from card import Card
-from config import UI_IMAGES, BLOOD_MOVE_RANGE
+from config import UI_IMAGES, BLOOD_MOVE_RANGE, HEAD_MOVE_X, HEAD_MOVE_Y
 from rule.difficulty import DifficultyMenu
 
 
@@ -478,8 +479,19 @@ class GameGUI:
                 continue
             img = self.ui_images.get(key)
             if img:
-                pos = info.get("pos", (0, 0))
+                pos = list(info.get("pos", (0, 0)))
                 scale = info.get("scale", 1.0)
+                # headL和headR动态运动
+                if key in ("headL", "headR"):
+                    t = pygame.time.get_ticks() / 1000.0
+                    if key == "headL":
+                        dx = int(HEAD_MOVE_X * math.sin(t))
+                        dy = int(HEAD_MOVE_Y * math.cos(t))
+                    else:
+                        dx = int(HEAD_MOVE_X * math.sin(t + math.pi))
+                        dy = int(HEAD_MOVE_Y * math.cos(t + math.pi))
+                    pos[0] += dx
+                    pos[1] += dy
                 if scale != 1.0:
                     w, h = img.get_width(), img.get_height()
                     img = pygame.transform.smoothscale(img, (int(w*scale), int(h*scale)))
@@ -572,7 +584,7 @@ class GameGUI:
         curse_total = self.game.get_total_curse_value()
         curse_font = pygame.font.SysFont(None, 36)
         curse_text = curse_font.render(f"curse total: {curse_total}", True, (128, 0, 128))
-        curse_rect = curse_text.get_rect(center=(self.screen_width-100, 30))
+        curse_rect = curse_text.get_rect(center=(self.screen_width // 2, 30))
         self.screen.blit(curse_text, curse_rect)
         # 难度为1时显示剩余安全移动次数
         if self.difficulty == 1:
