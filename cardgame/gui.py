@@ -424,6 +424,51 @@ class GameGUI:
         """绘制结算区域"""
         # 不再绘制结算区背景和标题，直接绘制结算区卡牌
         if self.settlement_display_cards:
+            # 统计各类型总和
+            type_sums = {'attack': 0, 'defense': 0, 'curse': 0, 'heal': 0}
+            for card in self.settlement_display_cards:
+                if card.type in type_sums:
+                    type_sums[card.type] += card.value
+            color_map = {'attack': (220,20,60), 'defense': (30,144,255), 'curse': (0,0,0), 'heal': (0,180,0)}
+            # 计算展示区所有卡牌的中心x和最上方y
+            xs = []
+            ys = []
+            for i, card in enumerate(self.settlement_display_cards):
+                x = self.settlement_area_rect.x + SETTLEMENT_DISPLAY_OFFSET[0] + (i % SETTLEMENT_DISPLAY_COLS) * SETTLEMENT_DISPLAY_X_SPACING
+                y = self.settlement_area_rect.y + SETTLEMENT_DISPLAY_OFFSET[1] + (i // SETTLEMENT_DISPLAY_COLS) * SETTLEMENT_DISPLAY_Y_SPACING
+                xs.append(x + int(self.card_width * SETTLEMENT_DISPLAY_SCALE)//2)
+                ys.append(y)
+            center_x = sum(xs)//len(xs)
+            min_y = min(ys)
+            # 构造所有有数值的类型的文本surface
+            value_font = pygame.font.SysFont(None, 40)
+            texts = []
+            for t in ['attack','defense','curse','heal']:
+                if type_sums[t] > 0:
+                    value_text = str(type_sums[t])
+                    text_surface = value_font.render(value_text, True, color_map[t])
+                    outline_text = value_font.render(value_text, True, (255,255,255))
+                    texts.append((text_surface, outline_text, t))
+            # 横向排列，整体居中
+            total_width = sum(s.get_width() for s,_,_ in texts) + (len(texts)-1)*20
+            start_x = center_x - total_width//2
+            for idx, (text_surface, outline_text, t) in enumerate(texts):
+                text_x = start_x
+                text_y = min_y - 32
+                text_rect = text_surface.get_rect()
+                text_rect.topleft = (text_x, text_y)
+                outline_rect = outline_text.get_rect(topleft=(text_x, text_y))
+                # 白色描边
+                for dx in [-1,0,1]:
+                    for dy in [-1,0,1]:
+                        if dx != 0 or dy != 0:
+                            outline_rect2 = outline_rect.copy()
+                            outline_rect2.x += dx
+                            outline_rect2.y += dy
+                            self.screen.blit(outline_text, outline_rect2)
+                self.screen.blit(text_surface, text_rect)
+                start_x += text_surface.get_width() + 20
+            # 继续绘制卡牌
             for i, card in enumerate(self.settlement_display_cards):
                 x = self.settlement_area_rect.x + SETTLEMENT_DISPLAY_OFFSET[0] + (i % SETTLEMENT_DISPLAY_COLS) * SETTLEMENT_DISPLAY_X_SPACING
                 y = self.settlement_area_rect.y + SETTLEMENT_DISPLAY_OFFSET[1] + (i // SETTLEMENT_DISPLAY_COLS) * SETTLEMENT_DISPLAY_Y_SPACING
@@ -541,39 +586,7 @@ class GameGUI:
         for i, pile in enumerate(self.game.piles):
             self.draw_pile(i, pile)
         # 3. 绘制结算区展示卡牌（延时后自动结算）
-        if self.settlement_display_cards:
-            for i, card in enumerate(self.settlement_display_cards):
-                x = self.settlement_area_rect.x + SETTLEMENT_DISPLAY_OFFSET[0] + (i % SETTLEMENT_DISPLAY_COLS) * SETTLEMENT_DISPLAY_X_SPACING
-                y = self.settlement_area_rect.y + SETTLEMENT_DISPLAY_OFFSET[1] + (i // SETTLEMENT_DISPLAY_COLS) * SETTLEMENT_DISPLAY_Y_SPACING
-                self.draw_card(card, x, y, SETTLEMENT_DISPLAY_SCALE)
-            # 展示时立即移除牌堆中的卡牌
-            if self.settlement_display_timer > 0 and not hasattr(self, '_settlement_removed'):
-                from_pile, from_index = self.settlement_display_from_pile
-                pile = self.game.piles[from_pile]
-                for card in self.settlement_display_cards:
-                    if card in pile.cards:
-                        pile.remove_card(pile.cards.index(card))
-                self._settlement_removed = True
-            # 到时后结算
-            if time.time() - self.settlement_display_timer > SETTLEMENT_DISPLAY_DURATION:
-                from_pile, from_index = self.settlement_display_from_pile
-                pile = self.game.piles[from_pile]
-                self.game.add_to_settlement(self.settlement_display_cards)
-                # 结算后自动翻开顶部暗牌
-                if pile.cards and not pile.face_up_cards:
-                    pile.flip_top_card()
-                # 结算后重置移动次数（新回合）
-                self.move_count = 0
-                self.last_turn += 1
-                self.settlement_display_cards = []
-                self.settlement_display_timer = 0
-                if hasattr(self, '_settlement_removed'):
-                    del self._settlement_removed
-        else:
-            for i, card in enumerate(self.game.settlement_area):
-                x = self.settlement_area_rect.x + SETTLEMENT_DISPLAY_OFFSET[0] + (i % SETTLEMENT_DISPLAY_COLS) * SETTLEMENT_DISPLAY_X_SPACING
-                y = self.settlement_area_rect.y + SETTLEMENT_DISPLAY_OFFSET[1] + (i // SETTLEMENT_DISPLAY_COLS) * SETTLEMENT_DISPLAY_Y_SPACING
-                self.draw_card(card, x, y, SETTLEMENT_DISPLAY_SCALE)
+        self.draw_settlement_area()
         # 4. 绘制正在拖拽的卡牌
         self.draw_dragging_card()
         # 5. 绘制生命值数值（左下角）
