@@ -172,7 +172,15 @@ HP_COLOR = (220, 20, 60)  # 红色
 HP_POS = (160, SCREEN_HEIGHT - 450)  # 左下角偏移
 
 # 血量图片下移幅度参数（血量为0时最大下移多少像素）
-BLOOD_MOVE_RANGE = 300  # 可根据需要调整
+BLOOD_MOVE_RANGE = 200  # 可根据需要调整
+
+# 结算区展示卡牌参数
+SETTLEMENT_DISPLAY_DURATION = 2.0  # 展示时长（秒）
+SETTLEMENT_DISPLAY_SCALE = 1     # 展示卡牌缩放比例
+SETTLEMENT_DISPLAY_OFFSET = (120,-40)  # 展示卡牌相对结算区左上角的偏移(x, y)
+SETTLEMENT_DISPLAY_COLS = 5      # 每行展示几张卡牌
+SETTLEMENT_DISPLAY_X_SPACING = 120  # 横向间距
+SETTLEMENT_DISPLAY_Y_SPACING = 160  # 纵向间距
 
 
 

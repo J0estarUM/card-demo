@@ -1,6 +1,7 @@
 import pygame
 import sys
 import os
+import time
 from config import *
 from typing import Tuple, Optional, Dict
 from game import Game
@@ -195,6 +196,11 @@ class GameGUI:
         # 视觉效果
         self.effects = []
         self.effect_duration = effect_duration  # 效果持续时间（毫秒）
+        
+        # 结算区相关
+        self.settlement_display_timer = 0
+        self.settlement_display_cards = []
+        self.settlement_display_from_pile = None
         
         # 初始化界面
         self.initialize_gui()
@@ -405,70 +411,42 @@ class GameGUI:
                 self.draw_card(card, base_x, card_y, self.hover_scale, True)
 
     def draw_bottom_area(self):
-        """绘制底部区域"""
-        # 绘制底部区域背景
-        pygame.draw.rect(self.screen, COLORS['GRAY'], self.bottom_area_rect)
-        pygame.draw.rect(self.screen, COLORS['BLACK'], self.bottom_area_rect, 2)
-
-        # 绘制结算区域
-        pygame.draw.rect(self.screen, COLORS['WHITE'], self.settlement_area_rect)
-        pygame.draw.rect(self.screen, COLORS['BLACK'], self.settlement_area_rect, 2)
-        
-        # 绘制结算区域标题
-        title_text = self.title_font.render("Settlement Area", True, COLORS['BLACK'])
-        title_rect = title_text.get_rect(center=(self.settlement_area_rect.centerx, 
-                                               self.settlement_area_rect.y + 25))
-        self.screen.blit(title_text, title_rect)
-
-        # 绘制生命值区域
-        pygame.draw.rect(self.screen, COLORS['WHITE'], self.hp_area_rect)
-        pygame.draw.rect(self.screen, COLORS['BLACK'], self.hp_area_rect, 2)
-        
-        # 绘制遗物区域
-        pygame.draw.rect(self.screen, COLORS['WHITE'], self.relic_area_rect)
-        pygame.draw.rect(self.screen, COLORS['BLACK'], self.relic_area_rect, 2)
-        
-        # 绘制遗物区域标题
-        relic_title = self.title_font.render("Relics", True, COLORS['BLACK'])
-        relic_title_rect = relic_title.get_rect(center=(self.relic_area_rect.centerx, 
-                                                      self.relic_area_rect.y + 25))
-        self.screen.blit(relic_title, relic_title_rect)
-        
-        # 绘制遗物
-        relic_spacing = 90  # 增加间距
-        for i, relic in enumerate(self.game.player.relics):
-            relic_rect = pygame.Rect(
-                self.relic_area_rect.x + 20 + i * relic_spacing,
-                self.relic_area_rect.y + 70,  # 调整位置
-                70,  # 增加尺寸
-                70
-            )
-            # 绘制遗物图标
-            pygame.draw.rect(self.screen, COLORS['YELLOW'], relic_rect)
-            pygame.draw.rect(self.screen, COLORS['BLACK'], relic_rect, 2)
-            
-            # 绘制遗物名称
-            relic_text = self.small_font.render(relic.name, True, COLORS['BLACK'])
-            text_rect = relic_text.get_rect(center=(relic_rect.centerx, relic_rect.bottom + 15))
-            self.screen.blit(relic_text, text_rect)
-            
-            # 绘制使用次数
-            charges_text = self.tiny_font.render(f"Uses: {relic.charges}/{relic.max_charges}", True, COLORS['BLACK'])
-            charges_rect = charges_text.get_rect(center=(relic_rect.centerx, relic_rect.bottom + 35))
-            self.screen.blit(charges_text, charges_rect)
+        """底部区域不再绘制任何内容"""
+        pass
 
     def draw_settlement_area(self):
         """绘制结算区域"""
-        # # 绘制结算区域背景
-        # pygame.draw.rect(self.screen, COLORS['GRAY'], self.settlement_area_rect)
-        # pygame.draw.rect(self.screen, COLORS['BLACK'], self.settlement_area_rect, 2)
-        #
-        # # 绘制标题
-        # title_text = self.font.render("结算区域", True, COLORS['BLACK'])
-        # title_rect = title_text.get_rect(center=(self.settlement_area_rect.centerx,
-        #                                        self.settlement_area_rect.top + 30))
-        # self.screen.blit(title_text, title_rect)
-
+        # 不再绘制结算区背景和标题，直接绘制结算区卡牌
+        if self.settlement_display_cards:
+            for i, card in enumerate(self.settlement_display_cards):
+                x = self.settlement_area_rect.x + SETTLEMENT_DISPLAY_OFFSET[0] + (i % SETTLEMENT_DISPLAY_COLS) * SETTLEMENT_DISPLAY_X_SPACING
+                y = self.settlement_area_rect.y + SETTLEMENT_DISPLAY_OFFSET[1] + (i // SETTLEMENT_DISPLAY_COLS) * SETTLEMENT_DISPLAY_Y_SPACING
+                self.draw_card(card, x, y, SETTLEMENT_DISPLAY_SCALE)
+            # 展示时立即移除牌堆中的卡牌
+            if self.settlement_display_timer > 0 and not hasattr(self, '_settlement_removed'):
+                from_pile, from_index = self.settlement_display_from_pile
+                pile = self.game.piles[from_pile]
+                for card in self.settlement_display_cards:
+                    if card in pile.cards:
+                        pile.remove_card(pile.cards.index(card))
+                self._settlement_removed = True
+            # 到时后结算
+            if time.time() - self.settlement_display_timer > SETTLEMENT_DISPLAY_DURATION:
+                from_pile, from_index = self.settlement_display_from_pile
+                pile = self.game.piles[from_pile]
+                self.game.add_to_settlement(self.settlement_display_cards)
+                # 结算后自动翻开顶部暗牌
+                if pile.cards and not pile.face_up_cards:
+                    pile.flip_top_card()
+                self.settlement_display_cards = []
+                self.settlement_display_timer = 0
+                if hasattr(self, '_settlement_removed'):
+                    del self._settlement_removed
+        else:
+            for i, card in enumerate(self.game.settlement_area):
+                x = self.settlement_area_rect.x + SETTLEMENT_DISPLAY_OFFSET[0] + (i % SETTLEMENT_DISPLAY_COLS) * SETTLEMENT_DISPLAY_X_SPACING
+                y = self.settlement_area_rect.y + SETTLEMENT_DISPLAY_OFFSET[1] + (i // SETTLEMENT_DISPLAY_COLS) * SETTLEMENT_DISPLAY_Y_SPACING
+                self.draw_card(card, x, y, SETTLEMENT_DISPLAY_SCALE)
 
     def add_effect(self, effect_type: str, value: int, position: Tuple[int, int]):
         """添加视觉效果"""
@@ -480,17 +458,13 @@ class GameGUI:
             'alpha': 255
         })
 
-
-
     def draw(self):
         """绘制整个游戏界面"""
-        # 优先绘制UI背景（如有）
+        # 1. 绘制背景和UI图片
         if self.ui_images.get("background"):
             self.screen.blit(self.ui_images["background"], (0, 0))
         else:
             self.screen.blit(self.background, (0, 0))
-
-        # 自动绘制所有UI图片（除background、blood、bottleBack、bottlefront，顺序与UI_IMAGES一致）
         for key, info in UI_IMAGES.items():
             if key in ("background", "blood", "bottleBack", "bottlefront"):
                 continue
@@ -502,8 +476,6 @@ class GameGUI:
                     w, h = img.get_width(), img.get_height()
                     img = pygame.transform.smoothscale(img, (int(w*scale), int(h*scale)))
                 self.screen.blit(img, pos)
-
-        # 先绘制bottleBack
         if "bottleBack" in self.ui_images and self.ui_images["bottleBack"]:
             info = UI_IMAGES["bottleBack"]
             img = self.ui_images["bottleBack"]
@@ -513,8 +485,6 @@ class GameGUI:
                 w, h = img.get_width(), img.get_height()
                 img = pygame.transform.smoothscale(img, (int(w*scale), int(h*scale)))
             self.screen.blit(img, pos)
-
-        # 再绘制blood（动态下移）
         if "blood" in self.ui_images and self.ui_images["blood"]:
             blood_img = self.ui_images["blood"]
             info = UI_IMAGES["blood"]
@@ -529,8 +499,6 @@ class GameGUI:
             blood_rect = blood_img.get_rect()
             blood_rect.topleft = (base_x, base_y + move_offset)
             self.screen.blit(blood_img, blood_rect)
-
-        # 再绘制bottlefront
         if "bottlefront" in self.ui_images and self.ui_images["bottlefront"]:
             info = UI_IMAGES["bottlefront"]
             img = self.ui_images["bottlefront"]
@@ -540,8 +508,6 @@ class GameGUI:
                 w, h = img.get_width(), img.get_height()
                 img = pygame.transform.smoothscale(img, (int(w*scale), int(h*scale)))
             self.screen.blit(img, pos)
-
-        # front图片始终在bottleBack、blood、bottlefront之上
         if "front" in self.ui_images and self.ui_images["front"]:
             info = UI_IMAGES["front"]
             img = self.ui_images["front"]
@@ -551,23 +517,46 @@ class GameGUI:
                 w, h = img.get_width(), img.get_height()
                 img = pygame.transform.smoothscale(img, (int(w*scale), int(h*scale)))
             self.screen.blit(img, pos)
-
-        # 绘制所有牌堆
+        # 2. 绘制所有牌堆
         for i, pile in enumerate(self.game.piles):
             self.draw_pile(i, pile)
-
-        # 绘制底部区域（包含生命值、遗物和结算区域）
-        # self.draw_bottom_area()
-
-        # 绘制正在拖拽的卡牌
+        # 3. 绘制结算区展示卡牌（延时后自动结算）
+        if self.settlement_display_cards:
+            for i, card in enumerate(self.settlement_display_cards):
+                x = self.settlement_area_rect.x + SETTLEMENT_DISPLAY_OFFSET[0] + (i % SETTLEMENT_DISPLAY_COLS) * SETTLEMENT_DISPLAY_X_SPACING
+                y = self.settlement_area_rect.y + SETTLEMENT_DISPLAY_OFFSET[1] + (i // SETTLEMENT_DISPLAY_COLS) * SETTLEMENT_DISPLAY_Y_SPACING
+                self.draw_card(card, x, y, SETTLEMENT_DISPLAY_SCALE)
+            # 展示时立即移除牌堆中的卡牌
+            if self.settlement_display_timer > 0 and not hasattr(self, '_settlement_removed'):
+                from_pile, from_index = self.settlement_display_from_pile
+                pile = self.game.piles[from_pile]
+                for card in self.settlement_display_cards:
+                    if card in pile.cards:
+                        pile.remove_card(pile.cards.index(card))
+                self._settlement_removed = True
+            # 到时后结算
+            if time.time() - self.settlement_display_timer > SETTLEMENT_DISPLAY_DURATION:
+                from_pile, from_index = self.settlement_display_from_pile
+                pile = self.game.piles[from_pile]
+                self.game.add_to_settlement(self.settlement_display_cards)
+                # 结算后自动翻开顶部暗牌
+                if pile.cards and not pile.face_up_cards:
+                    pile.flip_top_card()
+                self.settlement_display_cards = []
+                self.settlement_display_timer = 0
+                if hasattr(self, '_settlement_removed'):
+                    del self._settlement_removed
+        else:
+            for i, card in enumerate(self.game.settlement_area):
+                x = self.settlement_area_rect.x + SETTLEMENT_DISPLAY_OFFSET[0] + (i % SETTLEMENT_DISPLAY_COLS) * SETTLEMENT_DISPLAY_X_SPACING
+                y = self.settlement_area_rect.y + SETTLEMENT_DISPLAY_OFFSET[1] + (i // SETTLEMENT_DISPLAY_COLS) * SETTLEMENT_DISPLAY_Y_SPACING
+                self.draw_card(card, x, y, SETTLEMENT_DISPLAY_SCALE)
+        # 4. 绘制正在拖拽的卡牌
         self.draw_dragging_card()
-
-        # --- 新增：左下角血量数值绘制放到最后，确保不被遮挡 ---
-        # 注意player对象的血量属性为hp，最大血量为max_hp
+        # 5. 绘制生命值数值（左下角）
         hp_font = pygame.font.SysFont(None, HP_FONT_SIZE)
         hp_text = hp_font.render(f"HP: {self.game.player.hp}/{self.game.player.max_hp}", True, HP_COLOR)
         self.screen.blit(hp_text, HP_POS)
-        
         pygame.display.flip()
 
     def handle_mouse_motion(self, pos: Tuple[int, int]):
@@ -596,30 +585,26 @@ class GameGUI:
             if self.settlement_area_rect.collidepoint(pos):
                 from_pile, from_index = self.drag_card
                 pile = self.game.piles[from_pile]
-                
-                # 获取要结算的所有卡牌
                 cards_to_settle = pile.face_up_cards[from_index:]
-                
-                # 处理结算
-                success, message = self.game.add_to_settlement(list(cards_to_settle))
-                if success:
-                    # 添加视觉效果
-                    effect_pos = pos
-                    for card in cards_to_settle:
-                        if card.type == 'attack':
-                            self.add_effect('damage', card.value, effect_pos)
-                        elif card.type in ['defense', 'heal']:
-                            self.add_effect('heal', card.value, effect_pos)
-                        effect_pos = (effect_pos[0], effect_pos[1] + card_spacing)
-                    
-                    # 移除所有结算的卡牌
-                    for card in cards_to_settle:
-                        pile.remove_card(pile.cards.index(card))
-                    
-                    # 如果牌堆还有卡牌，翻开顶部卡牌
-                    if pile.cards and not pile.face_up_cards:
-                        pile.flip_top_card()
-            
+                # 只在没有展示中的卡牌时才允许新展示
+                if not self.settlement_display_cards:
+                    self.settlement_display_cards = list(cards_to_settle)
+                    self.settlement_display_timer = time.time()
+                    self.settlement_display_from_pile = (from_pile, from_index)
+                # 不立即移除和结算
+            else:
+                # 检查是否可以放置到其他牌堆
+                for pile_index, pile in enumerate(self.game.piles):
+                    pile_rect = pygame.Rect(
+                        pile_start_x + pile_index * (self.card_width + card_spacing),
+                        self.pile_area_y,  # 更新牌堆位置
+                        self.card_width,
+                        self.card_height * 3
+                    )
+                    if pile_rect.collidepoint(pos):
+                        from_pile, from_index = self.drag_card
+                        if from_pile != pile_index:
+                            success, message = self.game.move_cards(from_pile, pile_index, from_index)
             # 重置拖动状态
             self.dragging = False
             self.drag_card = None
@@ -663,17 +648,13 @@ class GameGUI:
                     if self.settlement_area_rect.collidepoint(event.pos):
                         from_pile, from_index = self.drag_card
                         pile = self.game.piles[from_pile]
-                        # 获取要结算的所有卡牌
                         cards_to_settle = pile.face_up_cards[from_index:]
-                        # 处理结算
-                        success, message = self.game.add_to_settlement(list(cards_to_settle))
-                        if success:
-                            # 移除所有结算的卡牌
-                            for card in cards_to_settle:
-                                pile.remove_card(pile.cards.index(card))
-                            # 如果牌堆还有卡牌，翻开顶部卡牌
-                            if pile.cards and not pile.face_up_cards:
-                                pile.flip_top_card()
+                        # 只在没有展示中的卡牌时才允许新展示
+                        if not self.settlement_display_cards:
+                            self.settlement_display_cards = list(cards_to_settle)
+                            self.settlement_display_timer = time.time()
+                            self.settlement_display_from_pile = (from_pile, from_index)
+                        # 不立即移除和结算
                     else:
                         # 检查是否可以放置到其他牌堆
                         for pile_index, pile in enumerate(self.game.piles):
