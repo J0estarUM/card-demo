@@ -60,7 +60,7 @@ class RuleMenu:
 
     ]
 
-    def __init__(self, screen: pygame.Surface, start_game: Callable[[], None] = None):
+    def __init__(self, screen: pygame.Surface, start_game: Callable[[int], None] = None):
         self.screen = screen
         self.start_game = start_game  # 返回游戏的回调函数
         self.running = True
@@ -129,17 +129,17 @@ class RuleMenu:
     def show_difficulty(self):
         """显示难度选择界面"""
         difficulty = DifficultyMenu(self.screen)
-        difficulty.run()
-        
-        # 难度选择后显示加载动画
-        loading_screen = LoadingScreen(self.screen, self.start_game)
+        selected = difficulty.run()
+        self.difficulty = selected
+        # 难度选择后显示加载动画，并传递难度参数
+        loading_screen = LoadingScreen(self.screen, lambda: self.start_game(self.difficulty))
         loading_screen.run()    
-        
         # 结束规则界面
         self.running = False
 
     def run(self):
         clock = pygame.time.Clock()
+        self.difficulty = None
         while self.running:
             events = pygame.event.get()
             for event in events:
@@ -151,7 +151,7 @@ class RuleMenu:
                 self.update()
 
             pygame.display.flip()
-            
+        return self.difficulty
 
     def cleanup(self):
         """清理资源"""

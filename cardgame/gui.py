@@ -7,6 +7,7 @@ from typing import Tuple, Optional, Dict
 from game import Game
 from card import Card
 from config import UI_IMAGES, BLOOD_MOVE_RANGE
+from rule.difficulty import DifficultyMenu
 
 
 # 资源管理类
@@ -126,7 +127,7 @@ class CardGUI:
 
 
 class GameGUI:
-    def __init__(self, game: Game):
+    def __init__(self, game: Game, difficulty=None):
         pygame.init()
         self.game = game
         self.screen_width = screen_width
@@ -134,7 +135,11 @@ class GameGUI:
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
         pygame.display.set_caption("Card Game")
         self.clock = pygame.time.Clock()
-
+        # 难度相关
+        self.difficulty = difficulty
+        self.move_limit = 3
+        self.move_count = 0
+        self.last_turn = 0
         # 初始化资源管理器
         self.assets = AssetManager()
 
@@ -438,6 +443,9 @@ class GameGUI:
                 # 结算后自动翻开顶部暗牌
                 if pile.cards and not pile.face_up_cards:
                     pile.flip_top_card()
+                # 结算后重置移动次数（新回合）
+                self.move_count = 0
+                self.last_turn += 1
                 self.settlement_display_cards = []
                 self.settlement_display_timer = 0
                 if hasattr(self, '_settlement_removed'):
@@ -542,6 +550,9 @@ class GameGUI:
                 # 结算后自动翻开顶部暗牌
                 if pile.cards and not pile.face_up_cards:
                     pile.flip_top_card()
+                # 结算后重置移动次数（新回合）
+                self.move_count = 0
+                self.last_turn += 1
                 self.settlement_display_cards = []
                 self.settlement_display_timer = 0
                 if hasattr(self, '_settlement_removed'):
@@ -557,6 +568,13 @@ class GameGUI:
         hp_font = pygame.font.SysFont(None, HP_FONT_SIZE)
         hp_text = hp_font.render(f"HP: {self.game.player.hp}/{self.game.player.max_hp}", True, HP_COLOR)
         self.screen.blit(hp_text, HP_POS)
+        # 难度为1时显示剩余安全移动次数
+        if self.difficulty == 1:
+            safe_moves_left = max(0, self.move_limit - self.move_count)
+            font = pygame.font.SysFont(None, 32)
+            text = font.render(f"step: {safe_moves_left}", True, (30, 144, 255))
+            text_rect = text.get_rect(bottomright=(self.screen_width - 40, self.screen_height - 40))
+            self.screen.blit(text, text_rect)
         pygame.display.flip()
 
     def handle_mouse_motion(self, pos: Tuple[int, int]):
@@ -604,6 +622,16 @@ class GameGUI:
                     if pile_rect.collidepoint(pos):
                         from_pile, from_index = self.drag_card
                         if from_pile != pile_index:
+                            # 难度为1时限制移动次数
+                            if self.difficulty == 1:
+                                # 判断是否新回合（可根据你实际的回合切换逻辑调整）
+                                now_turn = self.game.player.hp + sum(len(pile.cards) for pile in self.game.piles)
+                                if self.last_turn != now_turn:
+                                    self.move_count = 0
+                                    self.last_turn = now_turn
+                                self.move_count += 1
+                                if self.move_count > self.move_limit:
+                                    self.game.player.take_damage(1)
                             success, message = self.game.move_cards(from_pile, pile_index, from_index)
             # 重置拖动状态
             self.dragging = False
@@ -667,6 +695,16 @@ class GameGUI:
                             if pile_rect.collidepoint(event.pos):
                                 from_pile, from_index = self.drag_card
                                 if from_pile != pile_index:
+                                    # 难度为1时限制移动次数
+                                    if self.difficulty == 1:
+                                        # 判断是否新回合（可根据你实际的回合切换逻辑调整）
+                                        now_turn = self.game.player.hp + sum(len(pile.cards) for pile in self.game.piles)
+                                        if self.last_turn != now_turn:
+                                            self.move_count = 0
+                                            self.last_turn = now_turn
+                                        self.move_count += 1
+                                        if self.move_count > self.move_limit:
+                                            self.game.player.take_damage(1)
                                     success, message = self.game.move_cards(from_pile, pile_index, from_index)
                     # 重置拖动状态
                     self.dragging = False
