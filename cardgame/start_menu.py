@@ -4,10 +4,12 @@ from config import *
 import time
 from rule.rule_menu import RuleMenu
 from music_handler import music_handler
+from rule.modal_popup import ModalPopup
 
 class StartMenu:
-    def __init__(self, screen):
+    def __init__(self, screen, modal_popup=None):
         self.screen = screen
+        self.modal_popup = modal_popup
         self.bg_img = None
         self.btn_img = None
         self.new_game_img = None
@@ -24,6 +26,8 @@ class StartMenu:
         self.juhao_img = None
         self.cloud1_pos = list(CLOUD1_IMG_OFFSET)  # [x, y]
         self.cloud2_pos = None  # 右下角云朵的动态位置
+        self.running = True
+        self.current_text_index = 0
         self.load_assets()
         # 初始化cloud2的起始位置
         if self.cloud2_img:
@@ -32,12 +36,6 @@ class StartMenu:
                 screen_width - CLOUD2_IMG_OFFSET[0] - cloud2_rect.width,
                 screen_height - CLOUD2_IMG_OFFSET[1] - cloud2_rect.height
             ]
-        def __init__(self, screen):
-            self.screen = screen
-            self.start_game = start_game  # 将参数重命名并赋值给实例变量
-            self.running = True
-            self.current_text_index = 0
-            self.load_assets()
 
     def load_assets(self):
         # 加载背景
@@ -111,6 +109,8 @@ class StartMenu:
                     pygame.quit()
                     sys.exit()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if self.modal_popup:
+                        self.modal_popup.handle_event(event)
                     if self.btn_rect.collidepoint(event.pos):
                         running = False
                     elif self.loadgame_btn_rect.collidepoint(event.pos):
@@ -161,5 +161,7 @@ class StartMenu:
                 ))
                 self.screen.blit(self.loadgame_img, loadgame_rect)
 
+            if self.modal_popup:
+                self.modal_popup.draw()
             pygame.display.flip()
             clock.tick(60)

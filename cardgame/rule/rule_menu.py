@@ -60,7 +60,7 @@ class RuleMenu:
 
     ]
 
-    def __init__(self, screen: pygame.Surface, start_game: Callable[[int], None] = None):
+    def __init__(self, screen: pygame.Surface, start_game: Callable[[int], None] = None, modal_popup=None):
         self.screen = screen
         self.start_game = start_game  # 返回游戏的回调函数
         self.running = True
@@ -71,6 +71,7 @@ class RuleMenu:
         self.eye_img = None
         self.juhao_img = None
         self.font = None
+        self.modal_popup = modal_popup
         
         self.load_assets()  # 加载资源
 
@@ -95,6 +96,9 @@ class RuleMenu:
         self.rules_text = self.RULE_TEXTS[0]
     
     def handle_events(self, events: list[pygame.event.Event]):
+        if self.modal_popup:
+            for event in events:
+                self.modal_popup.handle_event(event)
         for event in events:
             if event.type == QUIT:
                 self.running = False
@@ -147,8 +151,13 @@ class RuleMenu:
                     self.running = False
                     break
 
-                self.handle_events(events)
-                self.update()
+            self.handle_events(events)
+            self.update()
+            
+            if self.modal_popup:
+                self.modal_popup.draw()
+            
+            pygame.display.flip()
 
             pygame.display.flip()
         return self.difficulty

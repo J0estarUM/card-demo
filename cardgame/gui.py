@@ -9,6 +9,7 @@ from game import Game
 from card import Card
 from config import UI_IMAGES, BLOOD_MOVE_RANGE, HEAD_MOVE_X, HEAD_MOVE_Y
 from rule.difficulty import DifficultyMenu
+from rule.modal_popup import ModalPopup
 
 
 # 资源管理类
@@ -18,6 +19,7 @@ class AssetManager:
         self.card_images: Dict[str, Dict[str, pygame.Surface]] = {}
         self.ui_elements: Dict[str, pygame.Surface] = {}
         self.backgrounds: Dict[str, pygame.Surface] = {}
+        self.modal_popup: Optional[ModalPopup] = None
 
         # 设置资源目录
         self.asset_dir = os.path.join(os.path.dirname(__file__), 'assets')
@@ -128,7 +130,7 @@ class CardGUI:
 
 
 class GameGUI:
-    def __init__(self, game: Game, difficulty=None):
+    def __init__(self, game: Game, difficulty=None, modal_popup=None):
         pygame.init()
         self.game = game
         self.screen_width = screen_width
@@ -143,6 +145,7 @@ class GameGUI:
         self.last_turn = 0
         # 初始化资源管理器
         self.assets = AssetManager()
+        self.assets.modal_popup = modal_popup
 
         # 卡牌尺寸
         self.card_width = card_width
@@ -669,11 +672,15 @@ class GameGUI:
             self.drag_card = None
             self.drag_offset = (0, 0)
 
-    def handle_events(self):
+    def handle_events(self, events):
         """处理所有游戏事件"""
-        for event in pygame.event.get():
+        for event in events:
             if event.type == pygame.QUIT:
                 return False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_TAB:
+                    if self.assets.modal_popup:
+                        self.assets.modal_popup.toggle()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:  # 左键点击
                     # 检查是否点击了遗物
@@ -763,9 +770,34 @@ class GameGUI:
         """运行游戏主循环"""
         running = True
         while running:
-            running = self.handle_events()
+            # 处理事件
+            events = pygame.event.get()
+            for event in events:
+                if event.type == pygame.QUIT:
+                    running = False
+                    break
+
+            # 如果弹窗显示，暂停所有游戏功能
+            if self.assets.modal_popup and self.assets.modal_popup.is_active:
+                # 只处理弹窗相关的事件
+                for event in events:
+                    if event.type == pygame.KEYDOWN and event.key == pygame.K_TAB:
+                        self.assets.modal_popup.toggle()
+                self.assets.modal_popup.draw()
+                pygame.display.flip()
+                self.clock.tick(60)
+                continue
+
+            # 处理事件和更新游戏状态
+            running = self.handle_events(events)
             self.draw()
             self.clock.tick(60)
+            
+            # 处理modal_popup
+            if self.assets.modal_popup:
+                self.assets.modal_popup.draw()
+            
+            pygame.display.flip()
 
             # 检查游戏状态
             if self.game.check_game_over():
@@ -777,6 +809,3 @@ class GameGUI:
 
         pygame.quit()
         sys.exit()
-
-
-
