@@ -18,6 +18,15 @@ class ModalPopup:
             self.popup_width,
             self.popup_height
         )
+        self.rule_texts = [
+            "黑塔内部规则小告示",
+            "卡牌种类\n进攻卡,防御卡,生命卡,诅咒卡$攻击和血量都是卡牌上的数值$",
+            "卡堆规则\n6堆牌,自由降序堆叠,拖入$中下部$的验证区进行验证",
+            "验证规则\n一次验证小于等于5张牌,$防御$大于等于$诅咒值$等于不扣血,$攻击$大于$诅咒值$等于击败；\n否则扣血并且卡回流",
+            "生命系统\n初始生命10点,可用生命卡恢复",
+            "胜利\n消除的诅咒牌累加达到52即胜利,生命为0即失败"
+        ]
+
 
     def apply_blur(self, surface, amount=10):
         """应用高斯模糊效果"""
@@ -54,11 +63,37 @@ class ModalPopup:
         border_rect = pygame.Rect(0, 0, self.popup_width, self.popup_height)
         pygame.draw.rect(popup_surface, (0, 0, 0), border_rect, 3)
         
-        # 绘制内容
-        font = pygame.font.Font(None, 36)
-        text = font.render("弹窗内容", True, (0, 0, 0))
-        text_rect = text.get_rect(center=border_rect.center)
-        popup_surface.blit(text, text_rect)
+        # 设置字体
+        title_font = pygame.font.Font("assets/font/IPix.ttf", 48)
+        normal_font = pygame.font.Font("assets/font/IPix.ttf", 24)
+
+        # 计算所有文本的总高度
+        total_height = len(self.rule_texts) * (normal_font.get_height() + 10) # 每行文本高度+行间距
+        start_y = border_rect.centery - total_height // 2 - 200  # 从弹窗垂直中心开始
+        line_height = normal_font.get_height() + 50 # 每行文本高度+行间距
+        text_x = border_rect.left + 150  # 从左边留出30像素的边距
+
+       
+        # 渲染第一行文本（使用不同颜色）
+        first_text = self.rule_texts[0]
+        rendered_first = title_font.render(first_text, True, (0, 0, 0))  # 使用紫色
+        first_rect = rendered_first.get_rect()
+        first_rect.topleft = (text_x, start_y)
+        popup_surface.blit(rendered_first, first_rect)
+        start_y += line_height
+
+        # 渲染剩余文本，处理换行
+        for text in self.rule_texts[1:]:
+            # 分割文本
+            lines = text.split('\n')
+            for line in lines:
+                rendered_text = normal_font.render(line, True, (0, 0, 0))
+                text_rect = rendered_text.get_rect()
+                text_rect.topleft = (text_x, start_y)
+                popup_surface.blit(rendered_text, text_rect)
+                start_y += normal_font.get_height() + 10  # 每行之间留出10像素间距
+            # 在每个规则之间留出更大的间距
+            start_y += 40
         
         # 绘制弹窗到屏幕上
         self.screen.blit(popup_surface, self.popup_rect)
