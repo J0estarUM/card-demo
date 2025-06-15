@@ -164,7 +164,7 @@ UI_IMAGES = {
 }
 
 # 血量上限
-MAX_HEALTH = 50  # 可根据需要修改
+MAX_HEALTH = 100  # 可根据需要修改
 
 # 血量数值显示参数
 HP_FONT_SIZE = 32  # 字体大小

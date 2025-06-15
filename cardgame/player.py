@@ -17,9 +17,9 @@ class Relic:
         return True, f"{self.name} effect activated!"
 
 class Player:
-    def __init__(self, max_hp: int = 100):
+    def __init__(self, max_hp: int = 100,hp:int = 5):
         self.max_hp = max_hp
-        self.hp = max_hp
+        self.hp = hp
         self.relics: List[Relic] = []
         self.initialize_relics()
 
