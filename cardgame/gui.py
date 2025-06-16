@@ -600,7 +600,7 @@ class GameGUI:
         curse_total = self.game.get_total_curse_value()
         curse_font = pygame.font.SysFont(None, 36)
         curse_text = curse_font.render(f"curse total: {curse_total}", True, (128, 0, 128))
-        curse_rect = curse_text.get_rect(center=(self.screen_width // 2, 30))
+        curse_rect = curse_text.get_rect(center=(self.screen_width-100, 30))
         self.screen.blit(curse_text, curse_rect)
         # 难度为1时显示剩余安全移动次数
         if self.difficulty == 1:
