@@ -13,6 +13,8 @@ class Game:
         self.defense_cards = []  # 防御卡
         self.attack_cards = []   # 攻击卡
         self.settlement_area = []  # 结算区域
+        self.removed_by_defense = []  # 被防御消灭的诅咒卡
+        self.removed_by_attack = []   # 被攻击消灭的诅咒卡
         
         # 初始化游戏
         self.initialize_game()
@@ -141,6 +143,9 @@ class Game:
                     returned_curse.append(curse)
             # 更新结算区，移除被消灭和返回的诅咒卡
             self.settlement_area = [c for c in self.settlement_area if c.type != 'curse']
+            # 更新被消灭的诅咒卡列表
+            self.removed_by_defense.extend(removed_by_defense)
+            self.removed_by_attack.extend(removed_by_attack)
             # --- 修改：返回的诅咒卡放入随机牌堆底部 ---
             for curse in returned_curse:
                 random_pile = random.choice(self.piles)
@@ -180,10 +185,19 @@ class Game:
         else:
             return False, "未产生结算效果。"
 
-    def get_total_curse_value(self) -> int:
-        """统计所有牌堆中诅咒牌的数值总和"""
+    def get_total_curse_value(self, include_removed: bool = False) -> int:
+        """统计诅咒牌的数值总和
+        
+        Args:
+            include_removed: 是否包括被消灭的诅咒卡（默认False）
+        """
         total = 0
-        for pile in self.piles:
-            total += sum(card.value for card in pile.cards if card.type == 'curse')
+        if include_removed:
+            # 统计被消灭的诅咒卡
+            total += sum(c.value for c in self.removed_by_attack)
+        else:
+            # 统计牌堆中的诅咒卡
+            for pile in self.piles:
+                total += sum(card.value for card in pile.cards if card.type == 'curse')
         return total
 
