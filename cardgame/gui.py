@@ -610,9 +610,9 @@ class GameGUI:
         curse_rect = curse_text.get_rect(center=(self.screen_width-100, 30))
         self.screen.blit(curse_text, curse_rect)
         # 显示被消灭的诅咒牌总数（位置参数集成到config）
-        destroyed_curse_text = curse_font.render(f"destroyed value: {self.game.destroyed_curse_total}/52", True, (128, 0, 128))
-        destroyed_curse_rect = destroyed_curse_text.get_rect(center=DESTROYED_CURSE_TEXT_POS)
-        self.screen.blit(destroyed_curse_text, destroyed_curse_rect)
+        #destroyed_curse_text = curse_font.render(f"destroyed value: {self.game.destroyed_curse_total}/52", True, (128, 0, 128))
+        #destroyed_curse_rect = destroyed_curse_text.get_rect(center=DESTROYED_CURSE_TEXT_POS)
+        #self.screen.blit(destroyed_curse_text, destroyed_curse_rect)
         # 难度为1时显示剩余安全移动次数
         if self.difficulty == 1:
             safe_moves_left = max(0, self.move_limit - self.move_count)

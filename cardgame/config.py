@@ -175,7 +175,7 @@ HP_POS = (160, SCREEN_HEIGHT - 450)  # 左下角偏移
 BLOOD_MOVE_RANGE = 200  # 可根据需要调整
 
 # 结算区展示卡牌参数
-SETTLEMENT_DISPLAY_DURATION = 2.0  # 展示时长（秒）
+SETTLEMENT_DISPLAY_DURATION = 3.5  # 展示时长（秒）
 SETTLEMENT_DISPLAY_SCALE = 1     # 展示卡牌缩放比例
 SETTLEMENT_DISPLAY_OFFSET = (120,-40)  # 展示卡牌相对结算区左上角的偏移(x, y)
 SETTLEMENT_DISPLAY_COLS = 5      # 每行展示几张卡牌
