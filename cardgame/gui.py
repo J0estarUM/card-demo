@@ -7,7 +7,7 @@ from config import *
 from typing import Tuple, Optional, Dict
 from game import Game
 from card import Card
-from config import UI_IMAGES, BLOOD_MOVE_RANGE, HEAD_MOVE_X, HEAD_MOVE_Y
+from config import UI_IMAGES, BLOOD_MOVE_RANGE, HEAD_MOVE_X, HEAD_MOVE_Y, DESTROYED_CURSE_TEXT_POS
 from rule.difficulty import DifficultyMenu
 from rule.modal_popup import ModalPopup
 
@@ -137,6 +137,12 @@ class GameGUI:
         self.screen_height = screen_height
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
         pygame.display.set_caption("Card Game")
+        try:
+            icon = pygame.image.load(back_card)
+            pygame.display.set_icon(icon)
+        except Exception as e:
+            print(f"设置窗口图标失败: {e}")
+        pygame.display.set_caption("52yoru")
         self.clock = pygame.time.Clock()
         # 难度相关
         self.difficulty = difficulty
@@ -602,6 +608,10 @@ class GameGUI:
         curse_text = curse_font.render(f"curse total: {curse_total}", True, (128, 0, 128))
         curse_rect = curse_text.get_rect(center=(self.screen_width-100, 30))
         self.screen.blit(curse_text, curse_rect)
+        # 显示被消灭的诅咒牌总数（位置参数集成到config）
+        destroyed_curse_text = curse_font.render(f"destroyed value: {self.game.destroyed_curse_total}/52", True, (128, 0, 128))
+        destroyed_curse_rect = destroyed_curse_text.get_rect(center=DESTROYED_CURSE_TEXT_POS)
+        self.screen.blit(destroyed_curse_text, destroyed_curse_rect)
         # 难度为1时显示剩余安全移动次数
         if self.difficulty == 1:
             safe_moves_left = max(0, self.move_limit - self.move_count)
@@ -807,5 +817,5 @@ class GameGUI:
                 print("恭喜获胜！")
                 running = False
 
-        pygame.quit()
-        sys.exit()
+        # pygame.quit()
+        # sys.exit()

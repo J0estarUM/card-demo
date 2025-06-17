@@ -16,18 +16,24 @@ def main():
     
     # 创建弹窗实例
     modal_popup = ModalPopup(screen)
-    # 先显示开始界面
-    StartMenu(screen).run()
-    # 创建游戏实例
-    game = Game()
-    def start_game(difficulty):
-        gui = GameGUI(game, difficulty=difficulty, modal_popup=modal_popup)
-        gui.run()
-    rule_menu = RuleMenu(screen, start_game)
-    rule_menu.modal_popup = modal_popup
-    rule_menu.run()
-    # 游戏结束后显示结算界面
-    EndMenu(screen, gui.game).run()
+    while True:
+        # 先显示开始界面
+        menu_result = StartMenu(screen).run()
+        if menu_result == "exit":
+            break
+        # 创建游戏实例
+        game = Game()
+        def start_game(difficulty):
+            gui = GameGUI(game, difficulty=difficulty, modal_popup=modal_popup)
+            gui.run()
+            # 检查是否胜利
+            if game.check_win_condition():
+                EndMenu(screen, game, is_win=True).run()
+            else:
+                EndMenu(screen, game, is_win=False).run()
+        rule_menu = RuleMenu(screen, start_game)
+        rule_menu.modal_popup = modal_popup
+        rule_menu.run()
 
 if __name__ == "__main__": 
     main()

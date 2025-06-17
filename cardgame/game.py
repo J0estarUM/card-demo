@@ -15,6 +15,7 @@ class Game:
         self.settlement_area = []  # 结算区域
         self.removed_by_defense = []  # 被防御消灭的诅咒卡
         self.removed_by_attack = []   # 被攻击消灭的诅咒卡
+        self.destroyed_curse_total = 0  # 被消灭的诅咒牌数值总和
         
         # 初始化游戏
         self.initialize_game()
@@ -89,15 +90,8 @@ class Game:
         return not self.player.is_alive()
         
     def check_win_condition(self) -> bool:
-        """所有牌堆和结算区都没有诅咒卡即胜利"""
-        for pile in self.piles:
-            for card in pile.cards:
-                if card.type == 'curse':
-                    return False
-        for card in self.settlement_area:
-            if card.type == 'curse':
-                return False
-        return True
+        """检查是否满足胜利条件：被消灭的诅咒牌数值总和达到52"""
+        return self.destroyed_curse_total >= 52
 
     def add_to_settlement(self, cards: List[Card]) -> Tuple[bool, str]:
         """将一组卡牌添加到结算区域并立即处理效果（新规则）"""
@@ -135,17 +129,27 @@ class Game:
             # 更新剩余未被防御抵消的诅咒卡
             remain_curse_cards = [c for c in remain_curse_cards if c not in removed_by_defense]
             # 再用攻击消灭诅咒卡
+            attack_used = 0  # 新增：本次攻击实际抵消的诅咒数值
             for curse in remain_curse_cards:
                 if remain_attack >= curse.value:
                     remain_attack -= curse.value
                     removed_by_attack.append(curse)
+                    attack_used += curse.value
                 else:
-                    returned_curse.append(curse)
+                    if remain_attack > 0:
+                        attack_used += remain_attack
+                        # 只抵消部分，剩余部分返还
+                        returned_curse.append(curse)
+                        remain_attack = 0
+                    else:
+                        returned_curse.append(curse)
             # 更新结算区，移除被消灭和返回的诅咒卡
             self.settlement_area = [c for c in self.settlement_area if c.type != 'curse']
             # 更新被消灭的诅咒卡列表
             self.removed_by_defense.extend(removed_by_defense)
             self.removed_by_attack.extend(removed_by_attack)
+            # 更新被消灭的诅咒牌总数（数值总和，包含部分抵消）
+            self.destroyed_curse_total += attack_used
             # --- 修改：返回的诅咒卡放入随机牌堆底部 ---
             for curse in returned_curse:
                 random_pile = random.choice(self.piles)

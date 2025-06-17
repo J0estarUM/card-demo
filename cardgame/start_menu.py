@@ -103,6 +103,7 @@ class StartMenu:
         music_handler.play_music("assets/music/home+rules.mp3", loop=True)
         running = True
         clock = pygame.time.Clock()
+        result = "start"
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -113,9 +114,10 @@ class StartMenu:
                         self.modal_popup.handle_event(event)
                     if self.btn_rect.collidepoint(event.pos):
                         running = False
+                        result = "start"
                     elif self.loadgame_btn_rect.collidepoint(event.pos):
                         print("点击了Load Game按钮")
-                    elif self.rule_btn_rect.collidepoint(event.pos):
+                    elif hasattr(self, 'rule_btn_rect') and self.rule_btn_rect.collidepoint(event.pos):
                         rule_menu = RuleMenu(self.screen)
                         rule_menu.run()
                         rule_menu.cleanup()  # 清理资源
@@ -165,3 +167,4 @@ class StartMenu:
                 self.modal_popup.draw()
             pygame.display.flip()
             clock.tick(60)
+        return result

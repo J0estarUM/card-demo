@@ -164,7 +164,7 @@ UI_IMAGES = {
 }
 
 # 血量上限
-MAX_HEALTH = 5  # 可根据需要修改
+MAX_HEALTH = 100 # 可根据需要修改
 
 # 血量数值显示参数
 HP_FONT_SIZE = 32  # 字体大小
@@ -185,6 +185,9 @@ SETTLEMENT_DISPLAY_Y_SPACING = 160  # 纵向间距
 # headL/headR运动幅度参数
 HEAD_MOVE_X = 20  # headL/headR水平方向最大偏移像素
 HEAD_MOVE_Y = 16  # headL/headR垂直方向最大偏移像素
+
+# 消灭诅咒卡总数文本显示位置（屏幕坐标）
+DESTROYED_CURSE_TEXT_POS = (screen_width-150, 70)  # (x, y)
 
 
 

@@ -14,15 +14,23 @@ class EndMenu:
     TEXT_FONT_SIZE = int(36 * SCALE)
     
     # 结束界面文本
-    END_TEXTS = [
-        "游戏结束",
-        "感谢您的游玩！",
-        "点击任意键返回主菜单"
-    ]
+    END_TEXTS = {
+        "win": [
+            "恭喜你完成了仪式！",
+            f"你成功收集了 {52} 点诅咒之力",
+            "点击任意键返回主菜单"
+        ],
+        "lose": [
+            "游戏结束",
+            "你未能完成仪式",
+            "点击任意键返回主菜单"
+        ]
+    }
 
-    def __init__(self, screen: pygame.Surface, game):
+    def __init__(self, screen: pygame.Surface, game, is_win: bool = False):
         self.screen = screen
         self.game = game
+        self.is_win = is_win
         self.running = True
         self.current_text_index = 0
         self.bg_img = None
@@ -51,36 +59,29 @@ class EndMenu:
             elif event.type == MOUSEBUTTONDOWN or event.type == KEYDOWN:
                 self.running = False
 
-    def update(self):
+    def draw(self):
+        # 绘制背景
         self.screen.blit(self.bg_img, (0, 0))
-        font = pygame.font.Font("assets/font/IPix.ttf", int(self.TEXT_FONT_SIZE))
         
-        lines = [line for line in self.END_TEXTS[self.current_text_index].split('\n') if line.strip()]
-        total_height = len(lines) * self.TEXT_LINE_HEIGHT
-        start_y = (screen_height - total_height) // 2
-
-        for i, line in enumerate(lines):
-            text_surface = font.render(line, True, self.TEXT_COLOR)
-            text_rect = text_surface.get_rect()
-            text_rect.centerx = screen_width // 2
-            text_rect.y = start_y + i * self.TEXT_LINE_HEIGHT
+        # 获取当前应该显示的文本
+        texts = self.END_TEXTS["win"] if self.is_win else self.END_TEXTS["lose"]
+        
+        # 绘制文本
+        y = self.TEXT_Y_OFFSET
+        for text in texts:
+            text_surface = self.font.render(text, True, self.TEXT_COLOR)
+            text_rect = text_surface.get_rect(center=(screen_width // 2, y))
             self.screen.blit(text_surface, text_rect)
+            y += self.TEXT_LINE_HEIGHT
 
     def run(self):
         clock = pygame.time.Clock()
         while self.running:
             events = pygame.event.get()
-            for event in events:
-                if event.type == pygame.QUIT:
-                    self.running = False
-                    break
-
             self.handle_events(events)
-            self.update()
+            self.draw()
             pygame.display.flip()
             clock.tick(60)
-        
-        return False
 
     def cleanup(self):
         music_handler.stop_music()
