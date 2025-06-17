@@ -9,6 +9,7 @@ from music_handler import music_handler
 from rule.difficulty import DifficultyMenu
 from rule.modal_popup import ModalPopup
 from rule.end_menu import EndMenu
+from rule.loading import LoadingScreen
 
 def main():
     pygame.init()
@@ -29,6 +30,9 @@ def main():
             # 检查是否胜利
             if game.check_win_condition():
                 EndMenu(screen, game, is_win=True).run()
+                # 胜利后显示加载界面
+                loading_screen = LoadingScreen(screen, lambda: start_game(difficulty))
+                loading_screen.run()
             else:
                 EndMenu(screen, game, is_win=False).run()
         rule_menu = RuleMenu(screen, start_game)

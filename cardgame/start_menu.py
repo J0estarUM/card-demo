@@ -5,6 +5,7 @@ import time
 from rule.rule_menu import RuleMenu
 from music_handler import music_handler
 from rule.modal_popup import ModalPopup
+from music_handler import music_handler
 
 class StartMenu:
     def __init__(self, screen, modal_popup=None):
@@ -113,9 +114,11 @@ class StartMenu:
                     if self.modal_popup:
                         self.modal_popup.handle_event(event)
                     if self.btn_rect.collidepoint(event.pos):
+                        music_handler.play_sound("assets/music/buttonclick.mp3")
                         running = False
                         result = "start"
                     elif self.loadgame_btn_rect.collidepoint(event.pos):
+                        music_handler.play_sound("assets/music/buttonclick.mp3")
                         print("点击了Load Game按钮")
                     elif hasattr(self, 'rule_btn_rect') and self.rule_btn_rect.collidepoint(event.pos):
                         rule_menu = RuleMenu(self.screen)

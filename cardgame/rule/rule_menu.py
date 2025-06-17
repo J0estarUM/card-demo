@@ -39,14 +39,16 @@ class RuleMenu:
 """,
 """
 你要摸清靠卡牌作战,每一张牌都是你的工具.武器,或代价.
-攻击牌...打击敌人,削弱诅咒.
-防御牌...抵御伤害,保护自己.
-生命牌...回复生命,延续存活.
-诅咒牌...它们是敌人,但也是完成仪式的关键.
+卡牌上面的数字就是他们的攻击值
+你可以使用攻击牌（有宝剑样式的）打击敌人,削弱诅咒.
+你可以使用防御牌（有盾牌样式的）抵御伤害,保护自己.
+你可以使用生命牌（有心形样式的）回复生命,延续存活.
+你可以使用诅咒牌（有水晶球样式的）...它们是敌人,但也是完成仪式的关键.
 每一张诅咒牌可以对你同时展开攻击和防御的双重效果，
 """,
 """
 还有一些神秘的规则需要你自己摸索.
+你可以按下TAB键查看提示
 """
 """
 在每一场战斗中，你必须选择
@@ -103,11 +105,13 @@ class RuleMenu:
             if event.type == QUIT:
                 self.running = False
             elif event.type == MOUSEBUTTONDOWN:
+                # 播放点击音效
+                music_handler.play_sound("assets/music/buttonclick.mp3")
                 if self.current_text_index < len(self.RULE_TEXTS) - 1:
                     self.current_text_index += 1
                     self.rules_text = self.RULE_TEXTS[self.current_text_index]
                 else:
-                   self.show_difficulty()
+                    self.show_difficulty()
     def update(self):
         """更新界面"""
         self.screen.blit(self.bg_img, (0, 0))     

@@ -16,9 +16,8 @@ class EndMenu:
     # 结束界面文本
     END_TEXTS = {
         "win": [
-            "恭喜你完成了仪式！",
-            f"你成功收集了 {52} 点诅咒之力",
-            "点击任意键返回主菜单"
+            "恭喜你完成了本轮仪式",
+            "点击任意键开始下一场仪式"
         ],
         "lose": [
             "游戏结束",
@@ -39,7 +38,7 @@ class EndMenu:
 
     def load_assets(self):
         try:
-            self.bg_img = pygame.image.load("assets/backgrounds/end_background.png").convert()
+            self.bg_img = pygame.image.load("assets/backgrounds/background.png").convert()
             self.bg_img = pygame.transform.scale(self.bg_img, (screen_width, screen_height))
         except Exception as e:
             self.bg_img = pygame.Surface((screen_width, screen_height))

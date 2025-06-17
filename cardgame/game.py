@@ -90,8 +90,12 @@ class Game:
         return not self.player.is_alive()
         
     def check_win_condition(self) -> bool:
-        """检查是否满足胜利条件：被消灭的诅咒牌数值总和达到52"""
-        return self.destroyed_curse_total >= 52
+        """检查是否满足胜利条件：牌堆中没有诅咒牌"""
+        # 检查所有牌堆中是否有诅咒牌
+        for pile in self.piles:
+            if any(card.type == 'curse' for card in pile.cards):
+                return False
+        return True
 
     def add_to_settlement(self, cards: List[Card]) -> Tuple[bool, str]:
         """将一组卡牌添加到结算区域并立即处理效果（新规则）"""
@@ -196,12 +200,8 @@ class Game:
             include_removed: 是否包括被消灭的诅咒卡（默认False）
         """
         total = 0
-        if include_removed:
-            # 统计被消灭的诅咒卡
-            total += sum(c.value for c in self.removed_by_attack)
-        else:
-            # 统计牌堆中的诅咒卡
-            for pile in self.piles:
-                total += sum(card.value for card in pile.cards if card.type == 'curse')
+        # 统计牌堆中的诅咒卡
+        for pile in self.piles:
+            total += sum(card.value for card in pile.cards if card.type == 'curse')
         return total
 

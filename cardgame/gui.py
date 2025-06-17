@@ -10,6 +10,7 @@ from card import Card
 from config import UI_IMAGES, BLOOD_MOVE_RANGE, HEAD_MOVE_X, HEAD_MOVE_Y, DESTROYED_CURSE_TEXT_POS
 from rule.difficulty import DifficultyMenu
 from rule.modal_popup import ModalPopup
+from music_handler import music_handler
 
 
 # 资源管理类
@@ -633,6 +634,8 @@ class GameGUI:
             pile = self.game.piles[pile_index]
             top_card_index = len(pile.face_up_cards) - 1
             if card_index >= top_card_index - 4:
+                # 播放点击牌的音效
+                music_handler.play_sound("assets/music/cardselect.mp3")
                 self.dragging = True
                 self.drag_card = (pile_index, card_index)
                 card_rect = self.get_card_rect(pile_index, card_index)
@@ -653,6 +656,8 @@ class GameGUI:
                     self.settlement_display_cards = list(cards_to_settle)
                     self.settlement_display_timer = time.time()
                     self.settlement_display_from_pile = (from_pile, from_index)
+                    # 播放放置到结算区的音效
+                    music_handler.play_sound("assets/music/cardverify.mp3")
                 # 不立即移除和结算
             else:
                 # 检查是否可以放置到其他牌堆
@@ -688,11 +693,13 @@ class GameGUI:
             if event.type == pygame.QUIT:
                 return False
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_TAB:
+                if event.key == pygame.K_ESCAPE:
+                    return False
+                elif event.key == pygame.K_TAB:
                     if self.assets.modal_popup:
                         self.assets.modal_popup.toggle()
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:  # 左键点击
+                if event.button == 1:  
                     # 检查是否点击了遗物
                     mouse_pos = event.pos
                     for i, relic in enumerate(self.game.player.relics):
@@ -777,6 +784,7 @@ class GameGUI:
         return True
 
     def run(self):
+        music_handler.play_music("assets/music/main.ogg", loop=True)
         """运行游戏主循环"""
         running = True
         while running:

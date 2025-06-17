@@ -1,5 +1,6 @@
 from typing import List, Tuple
 from card import Card
+from music_handler import music_handler
 
 class Relic:
     def __init__(self, name: str, description: str, trigger_type: str):
@@ -52,12 +53,14 @@ class Player:
     def take_damage(self, damage: int) -> int:
         """受到伤害"""
         self.hp = max(0, self.hp - damage)
+        music_handler.play_sound("assets/music/health.mp3")
         return damage
 
     def heal(self, amount: int) -> int:
         """恢复生命值"""
         old_hp = self.hp
         self.hp = min(self.max_hp, self.hp + amount)
+        music_handler.play_sound("assets/music/health.mp3")
         return self.hp - old_hp
 
     def get_relic(self, index: int) -> Relic:
